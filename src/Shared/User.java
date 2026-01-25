@@ -1,3 +1,5 @@
+package Shared;
+
 public class User {
 
     private int id;

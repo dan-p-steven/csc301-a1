@@ -8,6 +8,9 @@ I_FLAG=false
 O_FLAG=false
 W_FLAG=false
 
+LIB="lib/gson-2.13.1.jar"
+CLASSES="compiled"
+
 # Parse flags
 while getopts "cupiow" opt; do
   case $opt in
@@ -39,7 +42,7 @@ done
 # Execute commands based on flags
 if $C_FLAG; then
   echo "Running -c: compiling Java files..."
- javac -d compiled \
+ javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
 
@@ -47,7 +50,7 @@ fi
 
 if $U_FLAG; then
   echo "[UserService]"
-  java -cp compiled UserService.UserService
+  java -cp $CLASSES:$LIB UserService.UserService
 fi
 
 if $P_FLAG; then
