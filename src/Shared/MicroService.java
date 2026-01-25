@@ -4,12 +4,12 @@ import com.sun.net.httpserver.HttpHandler;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-public class MicroServer {
+public class MicroService {
 
     private HttpServer server;
 
     // Constructor for the microserver. Needs an address and ip to construct.
-    public MicroServer(String ip, int port) throws IOException {
+    public MicroService(String ip, int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress(ip, port), 0);
         server.setExecutor(null); // default executor
     }
@@ -35,3 +35,16 @@ public class MicroServer {
     }
 
 }
+
+// Testing purposes only.
+//    public static void main(String[] args) throws IOException{
+//
+//        String ip = "127.0.0.1";
+//        int port = 5050;
+//
+//        MicroService testServer = new MicroServer(ip, port);
+//        testServer.start();
+//        testServer.stop(5);
+//    }
+//
+//}
