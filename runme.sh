@@ -39,12 +39,15 @@ done
 # Execute commands based on flags
 if $C_FLAG; then
   echo "Running -c: compiling Java files..."
-  javac -d 
+ javac -d compiled \
+  src/Shared/*.java \
+  src/UserService/*.java \
+
 fi
 
 if $U_FLAG; then
-  echo "Running -u: placeholder for -u command"
-  # Add your -u code here
+  echo "[UserService]"
+  java -cp compiled UserService.UserService
 fi
 
 if $P_FLAG; then
