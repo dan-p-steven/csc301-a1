@@ -1,0 +1,10 @@
+public class UserService {
+
+    void updateUser(User user, int id, String email, String username, String password) {
+        // Update  user with the new fields
+        user.setId(id);
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setPassword(password);
+    }
+}
