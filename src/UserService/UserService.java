@@ -2,6 +2,8 @@ package UserService;
 
 import com.google.gson.Gson;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream.GetField;
+import java.util.ArrayList;
 import java.io.IOException;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -9,12 +11,18 @@ import com.sun.net.httpserver.HttpHandler;
 
 import Shared.MicroService;
 import Shared.User;
+import Shared.UserPostRequest;
+import Shared.UserGetRequest;
+
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class UserService extends MicroService{
 
     // API endpoint
     private String context = "/user";
+    private List<User> users = new ArrayList<>();
 
     public UserService (String ip, int port) throws IOException{
 
@@ -37,21 +45,28 @@ public class UserService extends MicroService{
 
                     InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
                     Gson gson = new Gson();
+                    UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
 
-                    User user = gson.fromJson(reader, User.class);
-                    System.out.println(user.getId());
-                    System.out.println(user.getUsername());
-                    System.out.println(user.getEmail());
-                    System.out.println(user.getPassword());
+                    switch (req.getCommand()) {
+                        case "create":
+                            System.out.println("Create command detected!");
+                            break;
+                        case "update":
+                            System.out.println("Update command detected!");
+                            break;
+                        case "delete":
+                            System.out.println("Delete command detected!");
+                            break;
+                        default:
+                            // unknown post request, return some kind of error
+                            break;
+                    }
                     break;
 
                 case "GET":
                 default:
                     break;
             }
-
-
-
         }
     }
 
