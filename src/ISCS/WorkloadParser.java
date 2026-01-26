@@ -22,6 +22,29 @@ public class WorkloadParser {
         String filename = args[0];
         ProcessWorkloadFile(filename);
     }
+
+    private static void processWorkloadFile(String filename)
+    {
+        try (BufferedReader br = new BufferedReader(new FileReader(filename)))
+        {
+            String line;
+            while ((line = br.readLine()) != null)
+            {
+                line = line.trim();
+
+                // skip empty lines and/or comments
+                if (line.isEmpty() || line.startsWith("#") || line.startsWith("[source]"))
+                {
+                    continue;
+                }
+
+                if (line.contains("#"))
+                {
+                    line = line.substring(0, line.indexOf("#")).trim();
+                }
+            }
+        }
+    }
     
 }
 
