@@ -1,4 +1,4 @@
-package Shared;
+package UserService;
 
 public class UserGetRequest {
 

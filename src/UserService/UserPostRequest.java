@@ -1,27 +1,29 @@
-package Shared;
+package UserService;
 
-public class User {
+public class UserPostRequest {
 
+    private String command;
     private int id;
     private String email;
     private String username;
     private String password;
-    
-    // Constructor
-    public User(int id, String email, String username, String password) {
+
+    public UserPostRequest(String command, int id, String username, String email, String password) {
+        this.command = command;
         this.id = id;
-        this.email = email;
         this.username = username;
+        this.email = email;
         this.password = password;
-    }
-    
-    // Getters
-    public int getId() {
-        return id;
+
     }
 
-    public String getEmail() {
-        return email;
+    // Getters
+    public String getCommand() {
+        return command;
+    }
+
+    public int getId() {
+        return id;
     }
 
     public String getUsername() {
@@ -32,15 +34,19 @@ public class User {
         return password;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
     // Setters
+    public void setCommand(String command) {
+        this.command = command;
+    }
+    
     public void setId(int id) {
         this.id = id;
     }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
+    
     public void setUsername(String username) {
         this.username = username;
     }
@@ -48,4 +54,9 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
 }

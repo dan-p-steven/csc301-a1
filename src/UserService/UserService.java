@@ -3,6 +3,7 @@ package UserService;
 import com.google.gson.Gson;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream.GetField;
+import java.security.Security;
 import java.util.ArrayList;
 import java.io.IOException;
 
@@ -10,9 +11,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import Shared.MicroService;
-import Shared.User;
-import Shared.UserPostRequest;
-import Shared.UserGetRequest;
+import Shared.SecurityUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +21,8 @@ public class UserService extends MicroService{
 
     // API endpoint
     private String context = "/user";
+
+    // "database" (temp memory)
     private List<User> users = new ArrayList<>();
 
     public UserService (String ip, int port) throws IOException{
@@ -32,7 +33,28 @@ public class UserService extends MicroService{
 
     }
 
-    static class UserHandler implements HttpHandler {
+    public void createUser(UserPostRequest req) {
+
+        // create a new user with hashed password 
+        // generate a UserPostResponse 
+        // return response
+
+        User newUser = new User(req.getId(), req.getUsername(), req.getEmail(), SecurityUtils.SHA256Hash(req.getPassword()));
+        // append to list of users
+        users.add(newUser);
+
+        System.out.println(newUser.getPassword());
+    }
+
+    public void deleteUser() {
+
+    }
+
+    public void updateUser() {
+
+    }
+
+    class UserHandler implements HttpHandler {
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
@@ -50,6 +72,7 @@ public class UserService extends MicroService{
                     switch (req.getCommand()) {
                         case "create":
                             System.out.println("Create command detected!");
+                            createUser(req);
                             break;
                         case "update":
                             System.out.println("Update command detected!");
@@ -69,6 +92,7 @@ public class UserService extends MicroService{
             }
         }
     }
+
 
 
     public static void main(String[] args) throws IOException{
