@@ -68,7 +68,24 @@ public class WorkloadParser {
         String method = "POST";
         String payload = "";
 
-        
+        switch(type)
+        {
+            case "USER":
+                endpoint = "/user";
+                if (command.equals("get"))
+                {
+                    method = "GET";
+                }
+                else
+                {
+                    payload = buildUserJson(command, parts);
+                }
+        }
+    }
+
+    private static String buildUserJson(String command, String[] parts)
+    {
+        return "{}";
     }
     
 }
