@@ -38,12 +38,37 @@ public class WorkloadParser {
                     continue;
                 }
 
+                //handles inline comments
                 if (line.contains("#"))
                 {
                     line = line.substring(0, line.indexOf("#")).trim();
                 }
+
+                try 
+                {parseAndSend(line);}
+                catch (Exception e)
+                {
+                    System.out.println("Error processing line: " + line);
+                    e.printStackTrace();
+
+                }
             }
         }
+    }
+
+    private static void parseAndSend(String line) throws IOException
+    {
+        String[] parts = line.split ("\\s+");
+        if (parts.length < 2) return;
+
+        String type = parts[0].toUpperCase();
+        String command = parts[1].toLowerCase();
+
+        String endpoint = "";
+        String method = "POST";
+        String payload = "";
+
+        
     }
     
 }
