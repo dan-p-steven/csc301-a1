@@ -80,11 +80,28 @@ public class WorkloadParser {
                 {
                     payload = buildUserJson(command, parts);
                 }
+                break;
+
+            case "PRODUCT":
+                endpoint = "/product";
+                // Implement PRODUCT command parsing here
+                break;
+
+            case "ORDER":
+                endpoint = "/order";
+                // Implement ORDER command parsing here
+                break;
+            
+            default:
+                System.out.println("Unknown type: " + type);
+                return;
         }
     }
 
     private static String buildUserJson(String command, String[] parts)
     {
+        // syntax: USER create <id> <username> <email> <password>
+        // index:   0     1      2       3        4         5
         return "{}";
     }
     
