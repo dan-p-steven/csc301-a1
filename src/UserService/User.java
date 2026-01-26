@@ -8,7 +8,7 @@ public class User {
     private String password;
     
     // Constructor
-    public User(int id, String email, String username, String password) {
+    public User(int id, String username, String email, String password) {
         this.id = id;
         this.email = email;
         this.username = username;

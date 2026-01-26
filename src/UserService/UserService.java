@@ -12,6 +12,7 @@ import com.sun.net.httpserver.HttpHandler;
 
 import Shared.MicroService;
 import Shared.SecurityUtils;
+import UserService.UserPostResponse;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,8 @@ public class UserService extends MicroService{
     // "database" (temp memory)
     private List<User> users = new ArrayList<>();
 
+    private Gson gson = new Gson();
+
     public UserService (String ip, int port) throws IOException{
 
         super(ip, port);
@@ -33,26 +36,74 @@ public class UserService extends MicroService{
 
     }
 
-    public void createUser(UserPostRequest req) {
+    public UserPostResponse createUser(UserPostRequest req) {
 
         // create a new user with hashed password 
         // generate a UserPostResponse 
         // return response
 
-        User newUser = new User(req.getId(), req.getUsername(), req.getEmail(), SecurityUtils.SHA256Hash(req.getPassword()));
-        // append to list of users
-        users.add(newUser);
 
-        System.out.println(newUser.getPassword());
+        // all fields must be required.
+        if (req.getId() == 0 || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
+            // return 400 error empty data
+            return new UserPostResponse(400, "{}");
+        } else {
+            // check if the ids are dupe
+            for (User u : this.users) {
+                if (u.getId() == req.getId()) {
+
+                    // return 409 error
+                    return new UserPostResponse(409, "{}");
+                }
+            }
+
+            // create a new user
+            User newUser = new User(req.getId(), req.getUsername(), req.getEmail(), SecurityUtils.SHA256Hash(req.getPassword()));
+
+            // add to list
+            this.users.add(newUser);
+
+            // turn user into json string
+            String data = gson.toJson(newUser);
+
+            // return 200 success and object
+            return new UserPostResponse(200, data);
+        }
+    }
+
+    public UserPostResponse updateUser(UserPostRequest req) {
+        for (User u : this.users) {
+
+            if (u.getId() == req.getId()) {
+
+                // update fields
+                if (req.getUsername() != null) {
+                    u.setUsername(req.getUsername());
+                }
+
+                if (req.getEmail() != null) {
+                    u.setEmail(req.getEmail());
+                }
+
+                if (req.getPassword() != null) {
+                    u.setPassword(SecurityUtils.SHA256Hash(req.getPassword()));
+                }
+
+                // success
+                String data = gson.toJson(u);
+                return new UserPostResponse(200, data);
+            }
+        }
+
+        // req not in list
+        // return 400 {}
+        return new UserPostResponse(400, "{}");
     }
 
     public void deleteUser() {
 
     }
 
-    public void updateUser() {
-
-    }
 
     class UserHandler implements HttpHandler {
 
@@ -60,22 +111,34 @@ public class UserService extends MicroService{
         public void handle(HttpExchange exchange) throws IOException {
 
             String method = exchange.getRequestMethod();
+            UserPostResponse resp;
             System.out.println(method);
 
             switch (method) {
                 case "POST":
 
                     InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
-                    Gson gson = new Gson();
                     UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
 
                     switch (req.getCommand()) {
                         case "create":
                             System.out.println("Create command detected!");
-                            createUser(req);
+                            resp = createUser(req);
+
+                            System.out.println(resp.getStatus());
+                            System.out.println(resp.getHeaders());
+                            System.out.println(resp.getData());
+
                             break;
+
                         case "update":
                             System.out.println("Update command detected!");
+                            System.out.println(req.getEmail());
+                            resp = updateUser(req);
+
+                            System.out.println(resp.getStatus());
+                            System.out.println(resp.getHeaders());
+                            System.out.println(resp.getData());
                             break;
                         case "delete":
                             System.out.println("Delete command detected!");

@@ -3,7 +3,7 @@ package UserService;
 public class UserPostRequest {
 
     private String command;
-    private int id;
+    private Integer id;
     private String email;
     private String username;
     private String password;
