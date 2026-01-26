@@ -61,13 +61,14 @@ public class WorkloadParser {
         String[] parts = line.split ("\\s+");
         if (parts.length < 2) return;
 
-        String type = parts[0].toUpperCase();
-        String command = parts[1].toLowerCase();
+        String type = parts[0].toUpperCase(); //USER, PRODUCT, ORDER
+        String command = parts[1].toLowerCase(); //create, get, update, delete
 
         String endpoint = "";
         String method = "POST";
         String payload = "";
 
+        //finds the endpoint and build JSON based on type
         switch(type)
         {
             case "USER":
@@ -84,24 +85,64 @@ public class WorkloadParser {
 
             case "PRODUCT":
                 endpoint = "/product";
-                // Implement PRODUCT command parsing here
+                if (command.equals("info"))
+                {
+                    method = "GET";
+                }
+                else
+                {
+                   payload = buildProductJson(command, parts);
+                }
                 break;
 
             case "ORDER":
                 endpoint = "/order";
-                // Implement ORDER command parsing here
+                payload = buildOrderJson(command, parts);
                 break;
             
             default:
                 System.out.println("Unknown type: " + type);
                 return;
         }
+
+        //makes the full url
+        String urlString = ORDER_SERVICE_URL + endpoint;
+
+        //if its a get, append the id to the url
+        if (method.equals("GET"))
+        {
+            if (parts.length > 2)
+            {
+                urlString += "/" + parts[2];
+            }
+        }
+
+        sendRequest(urlString, method, payload);
+    }
+
+    private static void sendRequest(String urlString, String method, String payload) throws IOException
+    {
+        return;
     }
 
     private static String buildUserJson(String command, String[] parts)
     {
         // syntax: USER create <id> <username> <email> <password>
         // index:   0     1      2       3        4         5
+        return "{}";
+    }
+
+    private static String buildProductJson(String command, String[] parts)
+    {
+        // syntax: PRODUCT add <id> <name> <description> <price> <stock>
+        // index:   0       1     2      3          4        5      6
+        return "{}";
+    }
+
+    private static String buildOrderJson(String command, String[] parts)
+    {
+        // syntax: ORDER create <product_id> <user_id> <quantity>
+        // index:   0      1       2          3          4 
         return "{}";
     }
     
