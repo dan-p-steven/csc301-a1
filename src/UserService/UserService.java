@@ -44,7 +44,7 @@ public class UserService extends MicroService{
 
 
         // all fields must be required.
-        if (req.getId() == 0 || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
+        if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
             // return 400 error empty data
             return new UserPostResponse(400, "{}");
         } else {
@@ -100,10 +100,37 @@ public class UserService extends MicroService{
         return new UserPostResponse(400, "{}");
     }
 
-    public void deleteUser() {
+    public UserPostResponse deleteUser(UserPostRequest req) {
 
+        if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
+            System.out.println("a value was null");
+            return new UserPostResponse(400, "{}");
+        } else {
+            // not empty request, need to ensure user exists
+            for (User u : this.users) {
+                if (u.getId() == req.getId()) {
+                    // found match
+                    // need to validate values
+                    if (u.getEmail().equals(req.getEmail()) &&
+                        u.getUsername().equals(req.getUsername()) && u.getPassword().equals(SecurityUtils.SHA256Hash(req.getPassword()))) {
+                        // valid match
+                        // delete u from users, return success
+                        this.users.remove(u);
+                        return new UserPostResponse(200, "{}");
+
+                    } else {
+                        // invalid match
+                        System.out.println("invalid match");
+                        return new UserPostResponse(400, "{}");
+
+                    }
+                }
+            }
+
+            // user id DNE
+            return new UserPostResponse(400, "{}");
+        }
     }
-
 
     class UserHandler implements HttpHandler {
 
@@ -142,6 +169,16 @@ public class UserService extends MicroService{
                             break;
                         case "delete":
                             System.out.println("Delete command detected!");
+                            System.out.println(req.getPassword());
+                            System.out.println(req.getEmail());
+                            System.out.println(req.getUsername());
+                            System.out.println(req.getId());
+                            resp = deleteUser(req);
+
+
+                            System.out.println(resp.getStatus());
+                            System.out.println(resp.getHeaders());
+                            System.out.println(resp.getData());
                             break;
                         default:
                             // unknown post request, return some kind of error

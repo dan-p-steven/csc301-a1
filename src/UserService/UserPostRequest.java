@@ -22,7 +22,7 @@ public class UserPostRequest {
         return command;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
