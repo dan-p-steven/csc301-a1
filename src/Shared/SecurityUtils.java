@@ -18,7 +18,7 @@ public class SecurityUtils {
             StringBuilder hexString = new StringBuilder();
 
             for (byte b : hashBytes) {
-                String hex = Integer.toHexString(0xff & b);
+                String hex = Integer.toHexString(0xff & b).toUpperCase();
                 if (hex.length() == 1) {
                     hexString.append('0');
                 }
