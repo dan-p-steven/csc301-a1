@@ -138,7 +138,15 @@ public class WorkloadParser {
                 os.write(input, 0, input.length);
             }
         }
-        return;
+
+        //get response
+        int status = conn.getResponseCode();
+        System.out.printf("Sent: %s %-40s | Payload: %-50s | Status: %d%n", 
+                          method, urlString, 
+                          (payload.length() > 50 ? payload.substring(0, 47) + "..." : payload), 
+                          status);
+
+        conn.disconnect();
     }
 
     private static String buildUserJson(String command, String[] parts)
