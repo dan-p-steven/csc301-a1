@@ -149,11 +149,19 @@ public class WorkloadParser {
         conn.disconnect();
     }
 
+    //helper funcs
+    
     private static String buildUserJson(String command, String[] parts)
     {
         // syntax: USER create <id> <username> <email> <password>
         // index:   0     1      2       3        4         5
-        return "{}";
+        
+        String id = (parts.length > 2) ? parts[2] : "";
+        
+        if (command.equals("update"))
+        {
+            String username = extractValue(parts, "username:");
+        }
     }
 
     private static String buildProductJson(String command, String[] parts)
@@ -168,6 +176,18 @@ public class WorkloadParser {
         // syntax: ORDER create <product_id> <user_id> <quantity>
         // index:   0      1       2          3          4 
         return "{}";
+    }
+
+    private static String extractValue(String[] parts, String prefix)
+    {
+        for (String part : parts)
+        {
+            if (part.startsWith(prefix))
+            {
+                return part.substring(prefix.length());
+            }
+        }
+        return "";
     }
     
 }
