@@ -38,7 +38,7 @@ public class UserService extends MicroService{
 
     }
 
-    public UserPostResponse createUser(UserPostRequest req) {
+    public void createUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
         // create a new user with hashed password 
         // generate a UserPostResponse 
@@ -48,14 +48,14 @@ public class UserService extends MicroService{
         // all fields must be required.
         if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
             // return 400 error empty data
-            return new UserPostResponse(400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
         } else {
             // check if the ids are dupe
             for (User u : this.users) {
                 if (u.getId() == req.getId()) {
 
                     // return 409 error
-                    return new UserPostResponse(409, "{}");
+                    HttpUtils.sendHttpResponse(exchange, 409, "{}");
                 }
             }
 
@@ -69,7 +69,7 @@ public class UserService extends MicroService{
             String data = gson.toJson(newUser);
 
             // return 200 success and object
-            return new UserPostResponse(200, data);
+            HttpUtils.sendHttpResponse(exchange, 200, data);
         }
     }
 
@@ -143,9 +143,6 @@ public class UserService extends MicroService{
             UserPostResponse resp;
             System.out.println(method);
 
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
-
-
             switch (method) {
                 case "POST":
 
@@ -155,11 +152,7 @@ public class UserService extends MicroService{
                     switch (req.getCommand()) {
                         case "create":
                             System.out.println("Create command detected!");
-                            resp = createUser(req);
-
-                            System.out.println(resp.getStatus());
-                            System.out.println(resp.getHeaders());
-                            System.out.println(resp.getData());
+                            createUser(exchange, req);
 
                             break;
 
@@ -187,6 +180,7 @@ public class UserService extends MicroService{
                             break;
                         default:
                             // unknown post request, return some kind of error
+                            HttpUtils.sendHttpResponse(exchange, 400, "{}");
                             break;
                     }
                     break;
