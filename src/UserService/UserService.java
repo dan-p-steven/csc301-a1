@@ -1,6 +1,8 @@
 package UserService;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream.GetField;
 import java.security.Security;
@@ -140,40 +142,45 @@ public class UserService extends MicroService{
         public void handle(HttpExchange exchange) throws IOException {
 
             String method = exchange.getRequestMethod();
-            UserPostResponse resp;
             System.out.println(method);
 
             switch (method) {
                 case "POST":
 
                     InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
-                    UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
 
-                    switch (req.getCommand()) {
+                    try {
+                        UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
 
-                        case "create":
+                        switch (req.getCommand()) {
 
-                            System.out.println("Create command detected!");
-                            createUser(exchange, req);
-                            break;
+                            case "create":
 
-                        case "update":
+                                System.out.println("Create command detected!");
+                                createUser(exchange, req);
+                                break;
 
-                            System.out.println("Update command detected!");
-                            updateUser(exchange, req);
-                            break;
+                            case "update":
 
-                        case "delete":
+                                System.out.println("Update command detected!");
+                                updateUser(exchange, req);
+                                break;
 
-                            System.out.println("Delete command detected!");
-                            deleteUser(exchange, req);
-                            break;
+                            case "delete":
 
-                        default:
+                                System.out.println("Delete command detected!");
+                                deleteUser(exchange, req);
+                                break;
 
-                            // unknown post request, return some kind of error
-                            HttpUtils.sendHttpResponse(exchange, 400, "{}");
-                            break;
+                            default:
+
+                                // unknown post request, return some kind of error
+                                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                                break;
+                        }
+                    } catch (JsonSyntaxException e) {
+                        // malformed json body
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
                     }
                     break;
 
@@ -245,15 +252,4 @@ public class UserService extends MicroService{
         u.start();
         //u.stop(5);
     }
-
-    //User updateUser(User user, int id, String email, String username, String password) {
-    //    // Update  user with the new fields
-    //    user.setId(id);
-    //    user.setEmail(email);
-    //    user.setUsername(username);
-    //    user.setPassword(password);
-
-    //    return user;
-    //}
-
 }
