@@ -102,11 +102,12 @@ public class UserService extends MicroService{
         HttpUtils.sendHttpResponse(exchange, 400, "{}");
     }
 
-    public UserPostResponse deleteUser(UserPostRequest req) {
+    public void deleteUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
         if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
-            System.out.println("a value was null");
-            return new UserPostResponse(400, "{}");
+            // a value was null
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+
         } else {
             // not empty request, need to ensure user exists
             for (User u : this.users) {
@@ -118,19 +119,18 @@ public class UserService extends MicroService{
                         // valid match
                         // delete u from users, return success
                         this.users.remove(u);
-                        return new UserPostResponse(200, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
 
                     } else {
                         // invalid match
-                        System.out.println("invalid match");
-                        return new UserPostResponse(400, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
                     }
                 }
             }
 
             // user id DNE
-            return new UserPostResponse(400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
         }
     }
 
@@ -163,18 +163,11 @@ public class UserService extends MicroService{
                             break;
                         case "delete":
                             System.out.println("Delete command detected!");
-                            System.out.println(req.getPassword());
-                            System.out.println(req.getEmail());
-                            System.out.println(req.getUsername());
-                            System.out.println(req.getId());
-                            resp = deleteUser(req);
+                            deleteUser(exchange, req);
 
-
-                            System.out.println(resp.getStatus());
-                            System.out.println(resp.getHeaders());
-                            System.out.println(resp.getData());
                             break;
                         default:
+
                             // unknown post request, return some kind of error
                             HttpUtils.sendHttpResponse(exchange, 400, "{}");
                             break;
