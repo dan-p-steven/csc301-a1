@@ -150,22 +150,25 @@ public class UserService extends MicroService{
                     UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
 
                     switch (req.getCommand()) {
+
                         case "create":
+
                             System.out.println("Create command detected!");
                             createUser(exchange, req);
-
                             break;
 
                         case "update":
+
                             System.out.println("Update command detected!");
                             updateUser(exchange, req);
-
                             break;
+
                         case "delete":
+
                             System.out.println("Delete command detected!");
                             deleteUser(exchange, req);
-
                             break;
+
                         default:
 
                             // unknown post request, return some kind of error
@@ -175,16 +178,62 @@ public class UserService extends MicroService{
                     break;
 
                 case "GET":
-                    validatePath(exchange.getRequestURI().getPath());
+                    getUser(exchange, exchange.getRequestURI().getPath());
+
                 default:
+                    // unknown http request method
+                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
                     break;
             }
         }
     }
 
-    private boolean validatePath(String path) {
-        System.out.println(path);
-        return false;
+    public void getUser(HttpExchange exchange, String path) throws IOException {
+
+        String[] splitPath = path.split("/");
+        String contextValue = context.split("/")[1];
+        System.out.println(contextValue);
+
+        if (splitPath.length != 3) {
+            // fail, 400 {}
+            System.out.println("url path length not 2: " + splitPath.length);
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+
+        } else if (splitPath[0].equals("user")) {
+           // fail  400 {}
+           System.out.println("first url path not 'user'");
+           HttpUtils.sendHttpResponse(exchange, 400, "{}");
+
+        } else {
+
+            // check if user id is a valid int in user database 
+            try {
+
+                // try to turn id into int
+                int id = Integer.parseInt(splitPath[2]);
+                System.out.println(id);
+
+                // check if we have user with that id in db
+                for (User u: this.users) {
+                    if (u.getId() == id) {
+
+                        // success, 200 and user
+                        String data = gson.toJson(u);
+                        HttpUtils.sendHttpResponse(exchange, 200, data);
+
+                    }
+                }
+
+            } catch (NumberFormatException e) {
+
+                // there are letters in id , 400 {}
+                System.out.println("id not numeric");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
+        }
+
+        // user not found, return 404
+        HttpUtils.sendHttpResponse(exchange, 404, "{}");
     }
 
     public static void main(String[] args) throws IOException{
