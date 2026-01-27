@@ -15,28 +15,20 @@ import com.sun.net.httpserver.HttpHandler;
 import Shared.MicroService;
 import Shared.SecurityUtils;
 import Shared.HttpUtils;
-import Shared.ServerConfig;
 
 import java.util.ArrayList;
 import java.util.List;
 
-// These are to load server config
-import java.io.FileReader;
-import java.lang.reflect.Type;
-import java.util.Map;
-import com.google.gson.reflect.TypeToken;
 
 public class UserService extends MicroService{
 
-    private static String serverName = "UserService";
-
     // API endpoint
-    private static String context = "/user";
+    private String context = "/user";
 
     // "database" (temp memory)
     private List<User> users = new ArrayList<>();
 
-    private static Gson gson = new Gson();
+    private Gson gson = new Gson();
 
     public UserService (String ip, int port) throws IOException{
 
@@ -251,17 +243,10 @@ public class UserService extends MicroService{
 
     public static void main(String[] args) throws IOException{
 
-        // get the config file path from user
-        String configPath = args[0];
+        String ip = "127.0.0.1";
+        int port = 8000;
 
-        // read from json file
-        Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
-        Map <String, ServerConfig> servers = gson.fromJson(new FileReader(configPath), type);
-
-        // get the config of the current server
-        ServerConfig config = servers.get(serverName);
-
-        UserService u = new UserService(config.ip, config.port);
+        UserService u = new UserService(ip, port);
         u.start();
         //u.stop(5);
     }

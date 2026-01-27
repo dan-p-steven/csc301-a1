@@ -10,6 +10,7 @@ W_FLAG=false
 
 LIB="lib/gson-2.13.1.jar"
 CLASSES="compiled"
+CONFIG="config.json"
 
 # Parse flags
 while getopts "cupiow" opt; do
@@ -50,7 +51,7 @@ fi
 
 if $U_FLAG; then
   echo "[UserService]"
-  java -cp $CLASSES:$LIB UserService.UserService
+  java -cp $CLASSES:$LIB UserService.UserService $CONFIG
 fi
 
 if $P_FLAG; then
