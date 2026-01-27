@@ -187,12 +187,16 @@ public class UserService extends MicroService{
                     break;
 
                 case "GET":
+                    validatePath(exchange.getRequestURI().getPath());
                 default:
                     break;
             }
         }
     }
 
+    private boolean validatePath(String path) {
+        System.out.println(path);
+    }
 
 
     public static void main(String[] args) throws IOException{
