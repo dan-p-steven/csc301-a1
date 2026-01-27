@@ -73,7 +73,7 @@ public class UserService extends MicroService{
         }
     }
 
-    public UserPostResponse updateUser(UserPostRequest req) {
+    public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
         for (User u : this.users) {
 
             if (u.getId() == req.getId()) {
@@ -93,13 +93,13 @@ public class UserService extends MicroService{
 
                 // success
                 String data = gson.toJson(u);
-                return new UserPostResponse(200, data);
+                HttpUtils.sendHttpResponse(exchange, 200, data);
             }
         }
 
         // req not in list
         // return 400 {}
-        return new UserPostResponse(400, "{}");
+        HttpUtils.sendHttpResponse(exchange, 400, "{}");
     }
 
     public UserPostResponse deleteUser(UserPostRequest req) {
@@ -158,12 +158,8 @@ public class UserService extends MicroService{
 
                         case "update":
                             System.out.println("Update command detected!");
-                            System.out.println(req.getEmail());
-                            resp = updateUser(req);
+                            updateUser(exchange, req);
 
-                            System.out.println(resp.getStatus());
-                            System.out.println(resp.getHeaders());
-                            System.out.println(resp.getData());
                             break;
                         case "delete":
                             System.out.println("Delete command detected!");
