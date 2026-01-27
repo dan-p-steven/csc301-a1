@@ -12,6 +12,8 @@ import com.sun.net.httpserver.HttpHandler;
 
 import Shared.MicroService;
 import Shared.SecurityUtils;
+import Shared.HttpUtils;
+
 import UserService.UserPostResponse;
 
 import java.util.ArrayList;
@@ -141,6 +143,9 @@ public class UserService extends MicroService{
             UserPostResponse resp;
             System.out.println(method);
 
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+
+
             switch (method) {
                 case "POST":
 
@@ -196,8 +201,8 @@ public class UserService extends MicroService{
 
     private boolean validatePath(String path) {
         System.out.println(path);
+        return false;
     }
-
 
     public static void main(String[] args) throws IOException{
 
