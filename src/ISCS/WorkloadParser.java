@@ -175,15 +175,17 @@ public class WorkloadParser {
     {
         // syntax: ORDER create <product_id> <user_id> <quantity>
         // index:   0      1       2          3          4 
-        return "{}";
+        String productId = (parts.length > 2) ? parts[2] : "";
+        String userId = (parts.length > 3) ? parts[3] : "";
+        String quantity = (parts.length > 4) ? parts[4] : "";
+
+        return String.format("{\"command\":\"place order\", \"product_id\":%s, \"user_id\":%s, \"quantity\":%s}",
+                productId, userId, quantity);
     }
 
-    private static String extractValue(String[] parts, String prefix)
-    {
-        for (String part : parts)
-        {
-            if (part.startsWith(prefix))
-            {
+    private static String extractValue(String[] parts, String prefix) {
+        for (String part : parts) {
+            if (part.startsWith(prefix)) {
                 return part.substring(prefix.length());
             }
         }
