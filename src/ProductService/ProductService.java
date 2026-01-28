@@ -12,7 +12,6 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import ProductService.Product;
 import Shared.MicroService;
 import Shared.SecurityUtils;
 import Shared.HttpUtils;
@@ -47,40 +46,45 @@ public class ProductService extends MicroService{
 
     }
 
-    //public void createUser(HttpExchange exchange, ProductPostRequest req) throws IOException {
+    public void createProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
+        // create a product
+        //
+        // all fields must be required.
+        if (req.getId() == null || req.getName() == null || req.getDescription() == null || req.getPrice() == null || req.getQuantity() == null) {
 
-    //    // create a new user with hashed password 
-    //    // generate a UserPostResponse 
-    //    // return response
+            // return 400 error empty data
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
+        } else {
 
-    //    // all fields must be required.
-    //    if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
-    //        // return 400 error empty data
-    //        HttpUtils.sendHttpResponse(exchange, 400, "{}");
-    //    } else {
-    //        // check if the ids are dupe
-    //        for (User u : this.users) {
-    //            if (u.getId() == req.getId()) {
+            if (req.getQuantity() < 0 || req.getPrice() < 0) {
+                // return 400 error
+                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
 
-    //                // return 409 error
-    //                HttpUtils.sendHttpResponse(exchange, 409, "{}");
-    //            }
-    //        }
+            // check for duplicate products
+            for (Product p: this.products) {
+                if (p.getId() == req.getId()) {
+                    // found duplicate product
+                    // return 409
+                    HttpUtils.sendHttpResponse(exchange, 409, "{}");
+                }
+            }
 
-    //        // create a new user
-    //        User newUser = new User(req.getId(), req.getUsername(), req.getEmail(), SecurityUtils.SHA256Hash(req.getPassword()));
+            // no dupes, is success
+            // return 200 and product object
+            Product newProduct = new Product(req.getId(), req.getName(), req.getDescription(), req.getPrice(), req.getQuantity());
 
-    //        // add to list
-    //        this.users.add(newUser);
+            // add new product to aatabase
+            this.products.add(newProduct);
 
-    //        // turn user into json string
-    //        String data = gson.toJson(newUser);
+            // convert to json
+            String data = gson.toJson(newProduct);
 
-    //        // return 200 success and object
-    //        HttpUtils.sendHttpResponse(exchange, 200, data);
-    //    }
-    //}
+            HttpUtils.sendHttpResponse(exchange, 200, data);
+
+        }
+    }
 
     //public void updateUser(HttpExchange exchange, ProductPostRequest req) throws IOException {
     //    for (User u : this.users) {
@@ -164,7 +168,7 @@ public class ProductService extends MicroService{
                             case "create":
 
                                 System.out.println("Create command detected!");
-                                //createUser(exchange, req);
+                                createProduct(exchange, req);
                                 break;
 
                             case "update":

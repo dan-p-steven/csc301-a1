@@ -6,10 +6,10 @@ public class ProductPostRequest {
     private Integer id;
     private String name;
     private String description;
-    private float price;
+    private Float price;
     private Integer quantity;
 
-    public ProductPostRequest(String command, int id, String name, String description, float price, int quantity) {
+    public ProductPostRequest(String command, Integer id, String name, String description, Float price, Integer quantity) {
         this.command = command;
         this.id = id;
         this.name = name;
@@ -36,7 +36,7 @@ public class ProductPostRequest {
         return description;
     }
 
-    public float getPrice() {
+    public Float getPrice() {
         return price;
     }
 
@@ -61,7 +61,7 @@ public class ProductPostRequest {
         this.description = description;
     }
 
-    public void setPrice(float price) {
+    public void setPrice(Float price) {
         this.price = price;
     }
 
