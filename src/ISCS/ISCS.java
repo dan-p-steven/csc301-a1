@@ -17,7 +17,7 @@ import java.util.Map;
 
 public class ISCS extends MicroService 
 {
-    private static final String SERVICE_NAME = "InterServiceCommuncation";
+    private static final String SERVICE_NAME = "InterServiceCommunication";
     private static final Gson gson = new Gson();
 
     private final ServerConfig userServiceConfig;
@@ -83,10 +83,14 @@ public class ISCS extends MicroService
             InputStream responseStream = (responseCode >= 400) ? conn.getErrorStream() : conn.getInputStream();
             byte[] responseBytes = new byte[0];
 
-            if (responseStream != null) 
-            {
+            if (responseStream != null) {
                 ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                responseStream.transferTo(buffer);
+                byte[] data = new byte[1024];
+                int nRead;
+                while ((nRead = responseStream.read(data, 0, data.length)) != -1) {
+                    buffer.write(data, 0, nRead);
+                }
+                buffer.flush();
                 responseBytes = buffer.toByteArray();
             }
 
@@ -113,7 +117,7 @@ public class ISCS extends MicroService
         // Load server configurations
         Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
         Map<String, ServerConfig> servers = gson.fromJson(new FileReader(configFilePath), type);  
-        ServerConfig myConfig = servers.get(SERVER_NAME);
+        ServerConfig myConfig = servers.get(SERVICE_NAME);
         ServerConfig userConfig = servers.get("UserService");
         ServerConfig productConfig = servers.get("ProductService");
 
