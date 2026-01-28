@@ -9,7 +9,7 @@ public class Product {
     private int quantity;
     
     // Constructor
-    public User(int id, String name, String description, float price, int quantity) {
+    public Product(int id, String name, String description, float price, int quantity) {
         this.id = id;
         this.name = name;
         this.description = description;

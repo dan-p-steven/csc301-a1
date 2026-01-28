@@ -46,6 +46,7 @@ if $C_FLAG; then
  javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
+  src/ProductService/*.java
 
 fi
 
@@ -55,7 +56,8 @@ if $U_FLAG; then
 fi
 
 if $P_FLAG; then
-  echo "Running -p: placeholder for -p command"
+  echo "[ProductService]"
+  java -cp $CLASSES:$LIB ProductService.ProductService $CONFIG
   # Add your -p code here
 fi
 
