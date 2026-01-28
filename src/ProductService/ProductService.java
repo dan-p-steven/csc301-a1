@@ -12,7 +12,6 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import ProductService.Product;
 import Shared.MicroService;
 import Shared.SecurityUtils;
 import Shared.HttpUtils;

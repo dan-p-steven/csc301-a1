@@ -1,17 +1,19 @@
+package OrderService;
+
 public class OrderResponse {
 
     private Integer id;
     private Integer product_id;
     private Integer user_id;
     private Integer quantity;
-    private String state;
+    private String status;
 
-    public OrderResponse(Integer id, Integer product_id, Integer user_id, Integer quantity, String state) {
+    public OrderResponse(Integer id, Integer product_id, Integer user_id, Integer quantity, String status) {
         this.id = id;
         this.product_id = product_id;
         this.user_id = user_id;
         this.quantity = quantity;
-        this.state = state;
+        this.status = status;
 
     }
 
@@ -32,8 +34,8 @@ public class OrderResponse {
         return quantity;
     }
 
-    public String getState() {
-        return state;
+    public String getStatus() {
+        return status;
     }
 
     // Setters
@@ -53,7 +55,7 @@ public class OrderResponse {
         this.quantity = quantity;
     }
 
-    public void setState(String state) {
-        this.state = state;
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

@@ -1,20 +1,14 @@
 package OrderService;
 
-public class OrderRequest {
-    private String command;
+public class Order {
     private Integer product_id;
     private Integer user_id;
     private Integer quantity;
 
-    public OrderRequest(String command, Integer product_id, Integer user_id, Integer quantity) {
-        this.command = command;
+    public Order(Integer product_id, Integer user_id, Integer quantity) {
         this.product_id = product_id;
         this.user_id = user_id;
         this.quantity = quantity;
-    }
-    // Getters
-    public String getCommand() {
-        return command;
     }
 
     public Integer getProductId() {
@@ -29,11 +23,8 @@ public class OrderRequest {
         return quantity;
     }
 
-    // Setters
-    public void setCommand(String command) {
-        this.command = command;
-    }
 
+    // Setters
     public void setProductId(Integer productId) {
         this.product_id = productId;
     }
