@@ -87,66 +87,72 @@ public class ProductService extends MicroService{
         }
     }
 
-    //public void updateUser(HttpExchange exchange, ProductPostRequest req) throws IOException {
-    //    for (User u : this.users) {
+    public void updateProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
+        for (Product p : this.products) {
 
-    //        if (u.getId() == req.getId()) {
+            if (p.getId() == req.getId()) {
 
-    //            // update fields
-    //            if (req.getUsername() != null) {
-    //                u.setUsername(req.getUsername());
-    //            }
+                // update fields
+                if (req.getName() != null) {
+                    p.setName(req.getName());
+                }
 
-    //            if (req.getEmail() != null) {
-    //                u.setEmail(req.getEmail());
-    //            }
+                if (req.getDescription() != null) {
+                    p.setDescription(req.getDescription());
+                }
 
-    //            if (req.getPassword() != null) {
-    //                u.setPassword(SecurityUtils.SHA256Hash(req.getPassword()));
-    //            }
+                if (req.getPrice() != null) {
+                    p.setPrice(req.getPrice());
+                }
 
-    //            // success
-    //            String data = gson.toJson(u);
-    //            HttpUtils.sendHttpResponse(exchange, 200, data);
-    //        }
-    //    }
+                if (req.getQuantity() != null) {
+                    p.setQuantity(req.getQuantity());
+                }
 
-    //    // req not in list
-    //    // return 400 {}
-    //    HttpUtils.sendHttpResponse(exchange, 400, "{}");
-    //}
+                // success
+                String data = gson.toJson(p);
+                HttpUtils.sendHttpResponse(exchange, 200, data);
+            }
+        }
 
-    //public void deleteUser(HttpExchange exchange, ProductPostRequest req) throws IOException {
+        // req not in list
+        // return 400 {}
+        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+    }
 
-    //    if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
-    //        // a value was null
-    //        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+    public void deleteProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
 
-    //    } else {
-    //        // not empty request, need to ensure user exists
-    //        for (User u : this.users) {
-    //            if (u.getId() == req.getId()) {
-    //                // found match
-    //                // need to validate values
-    //                if (u.getEmail().equals(req.getEmail()) &&
-    //                    u.getUsername().equals(req.getUsername()) && u.getPassword().equals(SecurityUtils.SHA256Hash(req.getPassword()))) {
-    //                    // valid match
-    //                    // delete u from users, return success
-    //                    this.users.remove(u);
-    //                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
+        if (req.getId() == null || req.getName() == null || req.getDescription() == null || req.getPrice() == null || req.getQuantity() == null) {
+            // a value was null
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
-    //                } else {
-    //                    // invalid match
-    //                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        } else {
+            // not empty request, need to ensure user exists
+            for (Product p : this.products) {
+                if (p.getId() == req.getId()) {
+                    // found match
+                    // need to validate values
+                    if (p.getName().equals(req.getName()) &&
+                        p.getDescription().equals(req.getDescription()) && 
+                        p.getPrice() == req.getPrice() &&
+                        p.getQuantity() == req.getQuantity() ) {
+                        // valid match
+                        // delete u from users, return success
+                        this.products.remove(p);
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
 
-    //                }
-    //            }
-    //        }
+                    } else {
+                        // invalid match
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
-    //        // user id DNE
-    //        HttpUtils.sendHttpResponse(exchange, 400, "{}");
-    //    }
-    //}
+                    }
+                }
+            }
+
+            // user id DNE
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        }
+    }
 
     class ProductHandler implements HttpHandler {
 
@@ -175,13 +181,13 @@ public class ProductService extends MicroService{
                             case "update":
 
                                 System.out.println("Update command detected!");
-                                //updateUser(exchange, req);
+                                updateProduct(exchange, req);
                                 break;
 
                             case "delete":
 
                                 System.out.println("Delete command detected!");
-                                //deleteUser(exchange, req);
+                                deleteProduct(exchange, req);
                                 break;
 
                             default:
@@ -272,6 +278,6 @@ public class ProductService extends MicroService{
 
         ProductService service = new ProductService(config.ip, config.port);
         service.start();
-        //u.stop(5);
+        //service.stop(5);
     }
 }
