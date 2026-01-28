@@ -212,7 +212,7 @@ public class UserService extends MicroService{
             System.out.println("url path length not 2: " + splitPath.length);
             HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
-        } else if (splitPath[0].equals("user")) {
+        } else if (!splitPath[1].equals(contextValue)) {
            // fail  400 {}
            System.out.println("first url path not 'user'");
            HttpUtils.sendHttpResponse(exchange, 400, "{}");

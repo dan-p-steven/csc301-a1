@@ -12,6 +12,7 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import ProductService.Product;
 import Shared.MicroService;
 import Shared.SecurityUtils;
 import Shared.HttpUtils;
@@ -196,7 +197,7 @@ public class ProductService extends MicroService{
                     break;
 
                 case "GET":
-                    //getUser(exchange, exchange.getRequestURI().getPath());
+                    getProduct(exchange, exchange.getRequestURI().getPath());
 
                 default:
                     // unknown http request method
@@ -206,53 +207,56 @@ public class ProductService extends MicroService{
         }
     }
 
-    //public void getUser(HttpExchange exchange, String path) throws IOException {
+    public void getProduct(HttpExchange exchange, String path) throws IOException {
 
-    //    String[] splitPath = path.split("/");
-    //    String contextValue = context.split("/")[1];
-    //    System.out.println(contextValue);
+        String[] splitPath = path.split("/");
+        String contextValue = context.split("/")[1];
+        System.out.println(contextValue);
 
-    //    if (splitPath.length != 3) {
-    //        // fail, 400 {}
-    //        System.out.println("url path length not 2: " + splitPath.length);
-    //        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        if (splitPath.length != 3) {
+            // fail, 400 {}
+            System.out.println("url path length not 2: " + splitPath.length);
+            HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
-    //    } else if (splitPath[0].equals("user")) {
-    //       // fail  400 {}
-    //       System.out.println("first url path not 'user'");
-    //       HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        } else if (!splitPath[1].equals(contextValue)) {
 
-    //    } else {
+            // first string not contextValue
+           // fail  400 {}
+            //
+           System.out.println("first url path not '" + contextValue + "'");
+           HttpUtils.sendHttpResponse(exchange, 400, "{}");
 
-    //        // check if user id is a valid int in user database 
-    //        try {
+        } else {
 
-    //            // try to turn id into int
-    //            int id = Integer.parseInt(splitPath[2]);
-    //            System.out.println(id);
+            // check if product id is a valid int in user database 
+            try {
 
-    //            // check if we have user with that id in db
-    //            for (User u: this.users) {
-    //                if (u.getId() == id) {
+                // try to turn id into int
+                int id = Integer.parseInt(splitPath[2]);
+                System.out.println(id);
 
-    //                    // success, 200 and user
-    //                    String data = gson.toJson(u);
-    //                    HttpUtils.sendHttpResponse(exchange, 200, data);
+                // check if we have user with that id in db
+                for (Product p: this.products) {
+                    if (p.getId() == id) {
 
-    //                }
-    //            }
+                        // success, 200 and user
+                        String data = gson.toJson(p);
+                        HttpUtils.sendHttpResponse(exchange, 200, data);
 
-    //        } catch (NumberFormatException e) {
+                    }
+                }
 
-    //            // there are letters in id , 400 {}
-    //            System.out.println("id not numeric");
-    //            HttpUtils.sendHttpResponse(exchange, 400, "{}");
-    //        }
-    //    }
+            } catch (NumberFormatException e) {
 
-    //    // user not found, return 404
-    //    HttpUtils.sendHttpResponse(exchange, 404, "{}");
-    //}
+                // there are letters in id , 400 {}
+                System.out.println("id not numeric");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
+        }
+
+        // user not found, return 404
+        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+    }
 
     public static void main(String[] args) throws IOException{
 
