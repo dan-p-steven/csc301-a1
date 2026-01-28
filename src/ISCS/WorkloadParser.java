@@ -158,17 +158,54 @@ public class WorkloadParser {
         
         String id = (parts.length > 2) ? parts[2] : "";
         
-        if (command.equals("update"))
-        {
+        if (command.equals("update")) {
+            // Handle specialized update syntax: username:name email:foo@bar ...
             String username = extractValue(parts, "username:");
+            String email = extractValue(parts, "email:");
+            String password = extractValue(parts, "password:");
+            
+            return String.format("{\"command\":\"%s\", \"id\":%s, \"username\":\"%s\", \"email\":\"%s\", \"password\":\"%s\"}",
+                    command, id, username, email, password);
         }
+
+        // Standard create/delete
+        String username = (parts.length > 3) ? parts[3] : "";
+        String email = (parts.length > 4) ? parts[4] : "";
+        String password = (parts.length > 5) ? parts[5] : "";
+
+        return String.format("{\"command\":\"%s\", \"id\":%s, \"username\":\"%s\", \"email\":\"%s\", \"password\":\"%s\"}",
+                command, id, username, email, password);
     }
 
     private static String buildProductJson(String command, String[] parts)
     {
         // syntax: PRODUCT add <id> <name> <description> <price> <stock>
         // index:   0       1     2      3          4        5      6
-        return "{}";
+        String id = (parts.length > 2) ? parts[2] : "";
+
+        if (command.equals("update")) {
+            // PRODUCT update 4 name:granola price:4.99 quantity:20
+            String name = extractValue(parts, "name:");
+            String description = extractValue(parts, "description:");
+            String price = extractValue(parts, "price:");
+            String quantity = extractValue(parts, "quantity:");
+            
+            // Default numeric fields to 0 if missing to avoid JSON errors
+            if (price.isEmpty()) price = "0";
+            if (quantity.isEmpty()) quantity = "0";
+
+            return String.format("{\"command\":\"%s\", \"id\":%s, \"name\":\"%s\", \"description\":\"%s\", \"price\":%s, \"quantity\":%s}",
+                    command, id, name, description, price, quantity);
+        }
+
+        // Standard create/delete
+        String name = (parts.length > 3) ? parts[3] : "";
+        String description = (parts.length > 4) ? parts[4] : "";
+        String price = (parts.length > 5) ? parts[5] : "0";
+        String quantity = (parts.length > 6) ? parts[6] : "0";
+
+        return String.format("{\"command\":\"%s\", \"id\":%s, \"name\":\"%s\", \"description\":\"%s\", \"price\":%s, \"quantity\":%s}",
+                command, id, name, description, price, quantity);
     }
 
     private static String buildOrderJson(String command, String[] parts)
