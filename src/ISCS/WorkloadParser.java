@@ -21,7 +21,7 @@ public class WorkloadParser {
         }
 
         String filename = args[0];
-        ProcessWorkloadFile(filename);
+        processWorkloadFile(filename);
     }
 
     private static void processWorkloadFile(String filename)
@@ -55,6 +55,10 @@ public class WorkloadParser {
                 }
             }
         }
+        catch (IOException e) {
+        System.err.println("Error processing file: " + e.getMessage());
+        e.printStackTrace();
+    }
     }
 
     private static void parseAndSend(String line) throws IOException
