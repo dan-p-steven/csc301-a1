@@ -1,19 +1,21 @@
-package UserService;
+package ProductService;
 
-public class UserPostRequest {
+public class ProductPostRequest {
 
     private String command;
     private Integer id;
-    private String email;
-    private String username;
-    private String password;
+    private String name;
+    private String description;
+    private float price;
+    private Integer quantity;
 
-    public UserPostRequest(String command, int id, String username, String email, String password) {
+    public ProductPostRequest(String command, int id, String name, String description, float price, int quantity) {
         this.command = command;
         this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity;
 
     }
 
@@ -26,37 +28,46 @@ public class UserPostRequest {
         return id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
-    public String getPassword() {
-        return password;
+    public String getDescription() {
+        return description;
     }
 
-    public String getEmail() {
-        return email;
+    public float getPrice() {
+        return price;
+    }
+
+    public Integer getQuantity() {
+        return quantity;
     }
 
     // Setters
     public void setCommand(String command) {
         this.command = command;
     }
-    
-    public void setId(int id) {
+
+    public void setId(Integer id) {
         this.id = id;
     }
-    
-    public void setUsername(String username) {
-        this.username = username;
+
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setPrice(float price) {
+        this.price = price;
     }
 
+    public void setQuantity(Integer quantity) {
+        this.quantity = quantity;
+    }
 }
+
+
