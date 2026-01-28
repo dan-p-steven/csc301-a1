@@ -61,10 +61,14 @@ public class ISCS extends MicroService
             conn.setDoOutput(true);
 
             // forward headers
-            if (exchange.getRequestBody().available() > 0 || "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+           if (exchange.getRequestBody().available() > 0 || "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
                 try (InputStream is = exchange.getRequestBody();
                      OutputStream os = conn.getOutputStream()) {
-                    is.transferTo(os); 
+                    byte[] buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = is.read(buffer)) != -1) {
+                        os.write(buffer, 0, bytesRead);
+                    }
                 }
             }
 
