@@ -9,28 +9,32 @@ public class Product {
     private int quantity;
     
     // Constructor
-    public User(int id, String username, String email, String password) {
+    public User(int id, String name, String description, float price, int quantity) {
         this.id = id;
-        this.email = email;
-        this.username = username;
-        this.password = password;
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.quantity = quantity;
     }
-    
     // Getters
     public int getId() {
         return id;
     }
 
-    public String getEmail() {
-        return email;
+    public String getName() {
+        return name;
     }
 
-    public String getUsername() {
-        return username;
+    public String getDescription() {
+        return description;
     }
 
-    public String getPassword() {
-        return password;
+    public float getPrice() {
+        return price;
+    }
+
+    public int getQuantity() {
+        return quantity;
     }
 
     // Setters
@@ -38,15 +42,19 @@ public class Product {
         this.id = id;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPrice(float price) {
+        this.price = price;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 }
