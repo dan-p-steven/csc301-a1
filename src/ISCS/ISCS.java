@@ -4,6 +4,7 @@ import Shared.MicroService;
 import Shared.ServerConfig;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
+import com.sun.security.ntlm.Server;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -20,7 +21,7 @@ public class ISCS extends MicroService
     private static final Gson gson = new Gson();
 
     private final ServerConfig userServiceConfig;
-    pricvate final ServerConfig productServiceConfig;
+    private final ServerConfig productServiceConfig;
 
     public ISCS(String ip, int port, ServerConfig userConfig, ServerConfig productConfig) throws IOException 
     {
@@ -47,11 +48,84 @@ public class ISCS extends MicroService
         @Override
         public void handle(HttpExchange exchange) throws IOException
         {
+            //build target URL
             String path = exchange.getRequestURI().toString();
             String targetUrlString = "http://" + targetConfig.ip + ":" + targetConfig.port + path;
 
             System.out.println("[ISCS] Forwarding request to: " + exchange.getRequestMethod() + targetUrlString);
+
+            //open connection to target service
+            URL targetUrl = new URL(targetUrlString);
+            HttpURLConnection conn = (HttpURLConnection) targetUrl.openConnection();
+            conn.setRequestMethod(exchange.getRequestMethod());
+            conn.setDoOutput(true);
+
+            // forward headers
+            if (exchange.getRequestBody().available() > 0 || "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
+                try (InputStream is = exchange.getRequestBody();
+                     OutputStream os = conn.getOutputStream()) {
+                    is.transferTo(os); 
+                }
+            }
+
+            //get response code
+            int responseCode;
+            try
+            {
+                responseCode = conn.getResponseCode();
+            }
+            catch (IOException e)
+            {
+                responseCode = 503;
+            }
+
+            //read response
+            InputStream responseStream = (responseCode >= 400) ? conn.getErrorStream() : conn.getInputStream();
+            byte[] responseBytes = new byte[0];
+
+            if (responseStream != null) 
+            {
+                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+                responseStream.transferTo(buffer);
+                responseBytes = buffer.toByteArray();
+            }
+
+            //send response back to original client
+            exchange.getResponseHeaders().set("Content-Type", "application/json");
+            exchange.sendResponseHeaders(responseCode, responseBytes.length);
+            try (OutputStream os = exchange.getResponseBody()) 
+            {
+                os.write(responseBytes);
+            }
         }
+    }
+
+    public static void main(String[] args) throws IOException
+    {
+        if (args.length < 1)
+        {
+            System.out.println("Usage: java ISCS <config_file_path>");
+            return;
+        }
+
+        String configFilePath = args[0];
+
+        // Load server configurations
+        Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
+        Map<String, ServerConfig> servers = gson.fromJson(new FileReader(configFilePath), type);  
+        ServerConfig myConfig = servers.get(SERVER_NAME);
+        ServerConfig userConfig = servers.get("UserService");
+        ServerConfig productConfig = servers.get("ProductService");
+
+        if (myConfig == null || userConfig == null || productConfig == null)
+        {
+            System.err.println("Missing server configuration.");
+            return;
+        }
+
+        // Start ISCS server
+        ISCS iscs = new ISCS(myConfig.ip, myConfig.port, userConfig, productConfig);
+        iscs.start();
     }
 
 }
