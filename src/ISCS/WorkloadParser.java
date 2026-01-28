@@ -18,6 +18,7 @@ public class WorkloadParser {
         if (args.length < 1)
         {
             System.out.println("Usage: java WorkloadParser <workload_file_path>");
+            return;
         }
 
         String filename = args[0];
