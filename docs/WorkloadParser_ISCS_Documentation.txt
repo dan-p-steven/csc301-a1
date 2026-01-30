@@ -4,3 +4,7 @@ Specifically, we prompted the AI to generate the boilerplate code for the com.su
 This ensured we adherehed to the constraints of using standard Java libraries without explicitly requiring external HTTP clients.
 
 While the AI provided a functional skeleton, we made significant manual modifications to ensure compatibility with the lab environment and assignment quirks.
+The AI generate parser did not account for the specific formatting inconsistencies in the combinedWorkload.txt. 
+We manually implemented logic to check the parts.length of the input string and handle dynamic argument shifting to prevent ArrayIndexOutOfBounds exceptions.
+
+
