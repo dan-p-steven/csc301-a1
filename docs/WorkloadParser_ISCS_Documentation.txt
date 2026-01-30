@@ -1,0 +1,6 @@
+Generative A1 Usage Statement:
+We utilized generative AI (claude) to accelerate the developement of the Inter-Service Communication Service and the Workload Parser.
+Specifically, we prompted the AI to generate the boilerplate code for the com.sun.net.httpserver.HttpServer setup and the java.net.HttpURLConnection logic.
+This ensured we adherehed to the constraints of using standard Java libraries without explicitly requiring external HTTP clients.
+
+While the AI provided a functional skeleton, we made significant manual modifications to ensure compatibility with the lab environment and assignment quirks.
