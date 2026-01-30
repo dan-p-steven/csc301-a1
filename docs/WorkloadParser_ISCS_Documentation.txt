@@ -8,3 +8,15 @@ The AI generate parser did not account for the specific formatting inconsistenci
 We manually implemented logic to check the parts.length of the input string and handle dynamic argument shifting to prevent ArrayIndexOutOfBounds exceptions.
 
 
+Shortcuts and Scalability:
+
+ISCS:
+For assignment 1, the service reads a single IP and port for the User and Product services from config.json, and forwards traffic 1 to 1.
+It effectively acts as a pipe, copying the request method, headers, and body to the destination and relaying the response back.
+
+The current implementation assumes a single instance of every backend service. In assignment 2, we expect to scale to around 10,000 users,
+requiring multiple instances of the User and Product services to handle the load. A pass-through cannot distribute traffic amoung these multiple. 
+It would bottleneck on a singular instance.
+
+We will rewrite the ForwardHandler login in ISCS.java. Instead of loading a single ServerConfig object, the configuarate parser will need to
+accept a list of availible IP/Port pairs. We will
