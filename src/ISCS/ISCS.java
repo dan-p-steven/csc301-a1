@@ -4,7 +4,7 @@ import Shared.MicroService;
 import Shared.ServerConfig;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.sun.security.ntlm.Server;
+//import com.sun.security.ntlm.Server;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -52,7 +52,7 @@ public class ISCS extends MicroService
             String path = exchange.getRequestURI().toString();
             String targetUrlString = "http://" + targetConfig.ip + ":" + targetConfig.port + path;
 
-            System.out.println("[ISCS] Forwarding request to: " + exchange.getRequestMethod() + targetUrlString);
+            System.out.println("[ISCS] Forwarding "+ exchange.getRequestMethod() + " request to: " + targetUrlString);
 
             //open connection to target service
             URL targetUrl = new URL(targetUrlString);

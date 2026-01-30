@@ -32,7 +32,7 @@ public class HttpUtils {
 
     }
 
-    public static HttpResponse<String> sendPostRequest(String ip, int port, String endpoint, String body) throws IOException {
+    public static HttpResponse<String> sendPostRequest(String ip, int port, String endpoint, String body) throws IOException, InterruptedException {
 
         // create client
         HttpClient client = HttpClient.newHttpClient();
@@ -49,7 +49,7 @@ public class HttpUtils {
         return resp;
     }
 
-    public static HttpResponse<String> sendGetRequest(String ip, int port, String endpoint) throws IOException {
+    public static HttpResponse<String> sendGetRequest(String ip, int port, String endpoint) throws IOException, InterruptedException {
 
         // create client
         HttpClient client = HttpClient.newHttpClient();

@@ -128,6 +128,7 @@ public class UserService extends MicroService{
                         // delete u from users, return success
                         this.users.remove(u);
                         HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                        break;
 
                     } else {
                         // invalid match

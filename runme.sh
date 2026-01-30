@@ -46,8 +46,9 @@ if $C_FLAG; then
  javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
-  src/ProductService/*.java
-
+  src/ProductService/*.java \
+  src/ISCS/*.java
+  #src/OrderService/*.java \
 fi
 
 if $U_FLAG; then
@@ -58,18 +59,15 @@ fi
 if $P_FLAG; then
   echo "[ProductService]"
   java -cp $CLASSES:$LIB ProductService.ProductService $CONFIG
-  # Add your -p code here
 fi
 
 if $I_FLAG; then
-  echo "Running -i: placeholder for -i command"
-  # Add your -i code here
+  echo "[ISCS]"
+  java -cp $CLASSES:$LIB ISCS.ISCS $CONFIG
 fi
 
-if $O_FLAG; then
-  echo "Running -o: placeholder for -o command"
-  # Add your -o code here
-fi
+#if $O_FLAG; then
+#fi
 
 if $W_FLAG; then
   echo "Running -w: placeholder for -w command"

@@ -139,6 +139,7 @@ public class ProductService extends MicroService{
                         // delete u from users, return success
                         this.products.remove(p);
                         HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                        break;
 
                     } else {
                         // invalid match
