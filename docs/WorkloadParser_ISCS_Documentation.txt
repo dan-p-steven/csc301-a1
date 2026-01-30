@@ -7,9 +7,9 @@ While the AI provided a functional skeleton, we made significant manual modifica
 The AI generate parser did not account for the specific formatting inconsistencies in the combinedWorkload.txt. 
 We manually implemented logic to check the parts.length of the input string and handle dynamic argument shifting to prevent ArrayIndexOutOfBounds exceptions.
 
+---
 
 Shortcuts and Scalability:
-
 ISCS:
 For assignment 1, the service reads a single IP and port for the User and Product services from config.json, and forwards traffic 1 to 1.
 It effectively acts as a pipe, copying the request method, headers, and body to the destination and relaying the response back.
@@ -32,9 +32,9 @@ in under 4 minutes, sequential execution is mathematically impossible give stand
 We will refactor the parser to use Multi-threading. While strict ordering must be maintained for commands targeting the same
 user_id or prodcut_id, commands for different entities are independant. We plan to implement a threrad poo to send non-conflicting requestsin parallel.
 
+---
 
 Reusable Code Analysis:
-
 Despite the planned changes for scalability, the majoritty of our code remains usable for a2.
 
 ISCS:
