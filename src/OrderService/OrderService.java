@@ -100,101 +100,107 @@ public class OrderService extends MicroService {
     }
 
     private void _handleOrder(HttpExchange exchange) throws IOException {
+        
+        try {
+        String errBody;
+        OrderResponse ordResp;
+        String method = exchange.getRequestMethod();
+        System.out.println(method);
 
-            String errBody;
-            OrderResponse ordResp;
-            String method = exchange.getRequestMethod();
-            System.out.println(method);
+        if (method.equals("POST")) {
 
-            if (method.equals("POST")) {
+            // convert to request object
+            InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
 
-                // convert to request object
-                InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+            OrderRequest req = gson.fromJson(reader, OrderRequest.class);
 
-                // try
-                OrderRequest req = gson.fromJson(reader, OrderRequest.class);
+            // extract command
+            if (req.getCommand().equals("place order")) {
+                // verify if user id exists
+                //try
+                try {
+                    HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/"+req.getUserId());
 
-                // extract command
-                if (req.getCommand().equals("place order")) {
-                    // verify if user id exists
-                    //try
-                    try {
-                        HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/"+req.getUserId());
+                    // enough to check status
+                    if (userResp.statusCode() != 200) {
+                        // user doesn't exist
+                        // 400 {}
+                        ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                        errBody = gson.toJson(ordResp);
+                        HttpUtils.sendHttpResponse(exchange, 400, errBody);
 
-                        // enough to check status
-                        if (userResp.statusCode() != 200) {
-                            // user doesn't exist
-                            // 400 {}
-                            ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                            errBody = gson.toJson(ordResp);
-                            HttpUtils.sendHttpResponse(exchange, 400, errBody);
-
-                        }
-
-                        HttpResponse<String> prodResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId());
-
-                        if (prodResp.statusCode() != 200) {
-                            // prod doesnt exist or malformed 
-                            // 400 {}
-                            ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                            errBody = gson.toJson(ordResp);
-                            HttpUtils.sendHttpResponse(exchange, 400, errBody);
-                        }
-
-                        // prdocut exists 
-                        // need to check quantity
-                        Product p = gson.fromJson(prodResp.body(), Product.class);
-                        if (p.getQuantity() > req.getQuantity()) {
-                            // enough quant
-                            // place update order on product
-                            ProductPostRequest prodUpdateReq = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
-                            String prodUpdateReqBody = gson.toJson(prodUpdateReq);
-                            HttpResponse<String> prodUpdateResp = HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", prodUpdateReqBody);
-
-                            Product updatedProd = gson.fromJson(prodUpdateResp.body(), Product.class);
-
-                            // construct order response
-                            // when constructing the order response, i need to keep track of it in a db and update the id
-                            ordResp = new OrderResponse(orderCount, p.getId(), req.getUserId(), updatedProd.getQuantity(), "Success");
-                            String respBody = gson.toJson(ordResp);
-
-                            // 200 ok order response
-                            HttpUtils.sendHttpResponse(exchange, 200, respBody);
-
-                        } else {
-                            // not enough quant
-                            //
-                            // 400 status - exceeded quant
-                            ordResp = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
-                            String errorBody = gson.toJson(ordResp);
-                            HttpUtils.sendHttpResponse(exchange, 400, errorBody);
-
-                        }
-
-                    } catch (InterruptedException e) {
-                        // return 500 {}
-                        // 
-                        HttpUtils.sendHttpResponse(exchange, 500, "{}");
-                    } catch (IOException e) {
-                        // return 500 {}
-                        HttpUtils.sendHttpResponse(exchange, 500, "{}");
                     }
 
-                } else {
-                    // not a POST
-                    // bad request 400
-                    ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                    errBody = gson.toJson(ordResp);
-                    HttpUtils.sendHttpResponse(exchange, 400, errBody);
+                    HttpResponse<String> prodResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId());
+
+                    if (prodResp.statusCode() != 200) {
+                        // prod doesnt exist or malformed 
+                        // 400 {}
+                        ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                        errBody = gson.toJson(ordResp);
+                        HttpUtils.sendHttpResponse(exchange, 400, errBody);
+                    }
+
+                    // prdocut exists 
+                    // need to check quantity
+                    Product p = gson.fromJson(prodResp.body(), Product.class);
+                    if (p.getQuantity() > req.getQuantity()) {
+                        // enough quant
+                        // place update order on product
+                        ProductPostRequest prodUpdateReq = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
+                        String prodUpdateReqBody = gson.toJson(prodUpdateReq);
+                        HttpResponse<String> prodUpdateResp = HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", prodUpdateReqBody);
+
+                        Product updatedProd = gson.fromJson(prodUpdateResp.body(), Product.class);
+
+                        // construct order response
+                        // when constructing the order response, i need to keep track of it in a db and update the id
+                        ordResp = new OrderResponse(orderCount, p.getId(), req.getUserId(), updatedProd.getQuantity(), "Success");
+                        String respBody = gson.toJson(ordResp);
+
+                        // 200 ok order response
+                        HttpUtils.sendHttpResponse(exchange, 200, respBody);
+
+                    } else {
+                        // not enough quant
+                        //
+                        // 400 status - exceeded quant
+                        ordResp = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
+                        String errorBody = gson.toJson(ordResp);
+                        HttpUtils.sendHttpResponse(exchange, 400, errorBody);
+
+                    }
+
+                } catch (InterruptedException e) {
+                    // return 500 {}
+                    // 
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                } catch (IOException e) {
+                    // return 500 {}
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
                 }
 
             } else {
+                // not a POST
                 // bad request 400
                 ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
                 errBody = gson.toJson(ordResp);
                 HttpUtils.sendHttpResponse(exchange, 400, errBody);
-
             }
+
+        } else {
+
+            // not a post method
+            ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+            errBody = gson.toJson(ordResp);
+            HttpUtils.sendHttpResponse(exchange, 400, errBody);
+
+        }
+
+        } catch (JsonSyntaxException e) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{'status': 'Invalid Request'}");
+        }
+
 
     }
 
