@@ -13,6 +13,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import java.net.http.HttpResponse;
 
+import OrderService.Order;
 import OrderService.OrderRequest;
 import ProductService.Product;
 import ProductService.ProductPostRequest;
@@ -30,35 +31,33 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
-public class OrderService extends MicroService{
+public class OrderService extends MicroService {
 
     private static String serverName = "OrderService";
 
-    // API endpoint
+    // allowed API endpoints
     private static String context = "/order";
+    private static String[] allowedContexts = {"/user", "/product"};
 
     // "database" (temp memory)
-    private List<Product> orders = new ArrayList<>();
+    private List<Order> orders = new ArrayList<>();
 
     private static Gson gson = new Gson();
 
-    private int userPort, productPort;
-    private String userIp, productIp;
+    // remember information about ISCS
+    private String iscsIp;
+    private int iscsPort;
 
+    private int orderCount = 0;
 
     public OrderService (String ip, int port,
-                        String userIp, int userPort,
-                        String productIp, int productPort) throws IOException{
+                        String iscsIp, int iscsPort) throws IOException {
 
         super(ip, port);
         addContext(context, new OrderHandler());
 
-        this.userPort = userPort;
-        this.userIp = userIp;
-
-        this.productPort = productPort;
-        this.productIp = productIp;
-
+        this.iscsIp = iscsIp;
+        this.iscsPort = iscsPort;
 
     }
 
@@ -67,6 +66,37 @@ public class OrderService extends MicroService{
 
         @Override
         public void handle(HttpExchange exchange) throws IOException {
+
+            String path = exchange.getRequestURI().getPath();
+            HttpResponse<String> resp;
+
+            if (path.startsWith("/user") || path.startsWith("/product")) {
+                // forward to icsc
+                //
+                try {
+
+                    resp = HttpUtils.forwardRequest(exchange, iscsIp, iscsPort);
+                    // forward response 
+                    HttpUtils.forwardResponse(exchange, resp);
+
+                } catch (InterruptedException e) {
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                } catch (IOException e) {
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                }
+
+            } else if (path.startsWith("/order")) {
+                // handle the /order endpoint here using a helper function
+                _handleOrder(exchange);
+
+            } else {
+                // return error
+                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
+        }
+    }
+
+    private void _handleOrder(HttpExchange exchange) throws IOException {
 
             String errBody;
             OrderResponse ordResp;
@@ -82,64 +112,74 @@ public class OrderService extends MicroService{
                 OrderRequest req = gson.fromJson(reader, OrderRequest.class);
 
                 // extract command
-                if (req.getCommand().equals("POST")) {
+                if (req.getCommand().equals("place order")) {
                     // verify if user id exists
-                    HttpResponse<String> userResp = HttpUtils.sendGetRequest(userIp, userPort, "/user/"+req.getUserId());
+                    //try
+                    try {
+                        HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/"+req.getUserId());
 
-                    // enough to check status
-                    if (userResp.statusCode() != 200) {
-                        // user doesn't exist
-                        // 400 {}
-                        ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                        errBody = gson.toJson(ordResp);
-                        HttpUtils.sendHttpResponse(exchange, 400, errBody);
+                        // enough to check status
+                        if (userResp.statusCode() != 200) {
+                            // user doesn't exist
+                            // 400 {}
+                            ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                            errBody = gson.toJson(ordResp);
+                            HttpUtils.sendHttpResponse(exchange, 400, errBody);
 
-                    }
+                        }
 
-                    HttpResponse<String> prodResp = HttpUtils.sendGetRequest(productIp, productPort, "/product/" + req.getProductId());
+                        HttpResponse<String> prodResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId());
 
-                    if (prodResp.statusCode() != 200) {
-                        // prod doesnt exist or malformed 
-                        // 400 {}
-                        ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                        errBody = gson.toJson(ordResp);
-                        HttpUtils.sendHttpResponse(exchange, 400, errBody);
+                        if (prodResp.statusCode() != 200) {
+                            // prod doesnt exist or malformed 
+                            // 400 {}
+                            ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                            errBody = gson.toJson(ordResp);
+                            HttpUtils.sendHttpResponse(exchange, 400, errBody);
+                        }
 
-                    }
+                        // prdocut exists 
+                        // need to check quantity
+                        Product p = gson.fromJson(prodResp.body(), Product.class);
+                        if (p.getQuantity() > req.getQuantity()) {
+                            // enough quant
+                            // place update order on product
+                            ProductPostRequest prodUpdateReq = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
+                            String prodUpdateReqBody = gson.toJson(prodUpdateReq);
+                            HttpResponse<String> prodUpdateResp = HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", prodUpdateReqBody);
 
-                    // prdocut exists 
-                    // need to check quantity
-                    Product p = gson.fromJson(prodResp.body(), Product.class);
-                    if (p.getQuantity() > req.getQuantity()) {
-                        // enough quant
-                        // place update order on product
-                        ProductPostRequest prodUpdateReq = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
-                        String prodUpdateReqBody = gson.toJson(prodUpdateReq);
-                        HttpResponse<String> prodUpdateResp = HttpUtils.sendPostRequest(productIp, productPort, "/product", prodUpdateReqBody);
+                            Product updatedProd = gson.fromJson(prodUpdateResp.body(), Product.class);
 
-                        Product updatedProd = gson.fromJson(prodUpdateResp.body(), Product.class);
+                            // construct order response
+                            // when constructing the order response, i need to keep track of it in a db and update the id
+                            ordResp = new OrderResponse(orderCount, p.getId(), req.getUserId(), updatedProd.getQuantity(), "Success");
+                            String respBody = gson.toJson(ordResp);
 
-                        // construct order response
-                        ordResp = new OrderResponse(1, p.getId(), req.getUserId(), updatedProd.getQuantity(), "Success");
-                        String respBody = gson.toJson(ordResp);
+                            // 200 ok order response
+                            HttpUtils.sendHttpResponse(exchange, 200, respBody);
 
-                        // 200 ok order response
-                        HttpUtils.sendHttpResponse(exchange, 200, respBody);
+                        } else {
+                            // not enough quant
+                            //
+                            // 400 status - exceeded quant
+                            ordResp = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
+                            String errorBody = gson.toJson(ordResp);
+                            HttpUtils.sendHttpResponse(exchange, 400, errorBody);
 
-                    } else {
-                        // not enough quant
-                        //
-                        // 400 status - exceeded quant
-                        OrderResponse ordResp = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
-                        String errorBody = gson.toJson(ordResp);
-                        HttpUtils.sendHttpResponse(exchange, 400, errorBody);
+                        }
 
+                    } catch (InterruptedException e) {
+                        // return 500 {}
+                        // 
+                        HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                    } catch (IOException e) {
+                        // return 500 {}
+                        HttpUtils.sendHttpResponse(exchange, 500, "{}");
                     }
 
                 } else {
                     // not a POST
                     // bad request 400
-
                     ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
                     errBody = gson.toJson(ordResp);
                     HttpUtils.sendHttpResponse(exchange, 400, errBody);
@@ -147,17 +187,15 @@ public class OrderService extends MicroService{
 
             } else {
                 // bad request 400
-                //
                 ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
                 errBody = gson.toJson(ordResp);
                 HttpUtils.sendHttpResponse(exchange, 400, errBody);
 
             }
-        }
+
     }
 
-
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException {
 
         // get the config file path from user
         String configPath = args[0];
@@ -168,13 +206,12 @@ public class OrderService extends MicroService{
 
         // get the config of the current server
         ServerConfig config = servers.get(serverName);
-        ServerConfig userConfig = servers.get("UserService");
-        ServerConfig prodConfig = servers.get("ProductService");
+
+        // get the config of the ISCS
+        ServerConfig iscsConfig = servers.get("InterServiceCommunication");
 
 
-        OrderService service = new OrderService(config.ip, config.port,
-            userConfig.ip, userConfig.port,
-            prodConfig.ip, prodConfig.port);
+        OrderService service = new OrderService(config.ip, config.port, iscsConfig.ip, iscsConfig.port);
 
         service.start();
         //service.stop(5);

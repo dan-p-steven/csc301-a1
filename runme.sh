@@ -43,12 +43,12 @@ done
 # Execute commands based on flags
 if $C_FLAG; then
   echo "Running -c: compiling Java files..."
- javac -cp .:$LIB -d $CLASSES \
+  javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
   src/ProductService/*.java \
-  src/ISCS/*.java
-  #src/OrderService/*.java \
+  src/ISCS/*.java \
+  src/OrderService/*.java
 fi
 
 if $U_FLAG; then
@@ -66,8 +66,10 @@ if $I_FLAG; then
   java -cp $CLASSES:$LIB ISCS.ISCS $CONFIG
 fi
 
-#if $O_FLAG; then
-#fi
+if $O_FLAG; then
+    echo "[OrderService]"
+    java -cp $CLASSES:$LIB OrderService.OrderService $CONFIG
+fi
 
 if $W_FLAG; then
   echo "Running -w: placeholder for -w command"

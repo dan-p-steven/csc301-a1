@@ -3,6 +3,7 @@ package Shared;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
@@ -15,6 +16,7 @@ import com.google.gson.Gson;
 public class HttpUtils {
 
     public static void sendHttpResponse(HttpExchange exchange, int status, String data) throws IOException{
+        // send a specific response back
 
         // set the headers to json (important)
         exchange.getResponseHeaders().set("Content-Type", "application/json");
@@ -30,6 +32,74 @@ public class HttpUtils {
         responseBodyStream.write(dataBytes);
         responseBodyStream.close();
 
+    }
+
+    public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) throws IOException {
+        // forward a response without any doing anything to it
+
+        // Extract response info
+        int statusCode = response.statusCode();
+        String responseBody = response.body();
+
+        // Copy Content-Type header if present
+        String contentType = response.headers().firstValue("Content-Type").orElse("application/json");
+        exchange.getResponseHeaders().set("Content-Type", contentType);
+
+        // Send response back to original caller
+        exchange.sendResponseHeaders(statusCode, responseBody.length());
+        OutputStream os = exchange.getResponseBody();
+        os.write(responseBody.getBytes());
+        os.close();
+
+    }
+
+    public static HttpResponse<String> forwardRequest(HttpExchange exchange, String destIp, int destPort) throws IOException, InterruptedException {
+        // forward request to another machine
+
+        Headers reqHeader = exchange.getRequestHeaders();
+        String reqUri = exchange.getRequestURI().toString();
+        String reqMethod = exchange.getRequestMethod();
+
+        String destUrl =  "http://" + destIp + ":" + destPort + reqUri;
+        String reqBody;
+
+        // Start building the forward request
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+        .uri(URI.create(destUrl));
+
+        // set the appropriate method
+        if (reqMethod.equals("POST")) {
+
+            // populate body and set method to POST
+           reqBody = new String(exchange.getRequestBody().readAllBytes());
+           builder.POST(HttpRequest.BodyPublishers.ofString(reqBody));
+
+        } else if (reqMethod.equals("PUT")) {
+
+            // populate body and set method to PUT
+           reqBody = new String(exchange.getRequestBody().readAllBytes());
+           builder.PUT(HttpRequest.BodyPublishers.ofString(reqBody));
+
+        } else if (reqMethod.equals("DELETE")) {
+            builder.DELETE();
+        } else if (reqMethod.equals("GET")) {
+            builder.GET();
+        }
+
+         // Copy headers
+        String contentType = reqHeader.getFirst("Content-Type");
+        if (contentType != null) {
+            builder.header("Content-Type", contentType);
+        }
+
+
+        // open client and send request
+        HttpRequest forwardReq = builder.build();
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> resp = client.send(forwardReq, HttpResponse.BodyHandlers.ofString());
+
+        // return the response
+        return resp;
     }
 
     public static HttpResponse<String> sendPostRequest(String ip, int port, String endpoint, String body) throws IOException, InterruptedException {
