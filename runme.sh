@@ -13,7 +13,7 @@ CLASSES="compiled"
 CONFIG="config.json"
 
 # Parse flags
-while getopts "cupiow" opt; do
+while getopts "cupiow:" opt; do
   case $opt in
     c)
       C_FLAG=true
@@ -32,6 +32,7 @@ while getopts "cupiow" opt; do
       ;;
     w)
       W_FLAG=true
+      W_ARG="$OPTARG"
       ;;
     \?)
       echo "Invalid option: -$OPTARG" >&2
@@ -72,7 +73,6 @@ if $O_FLAG; then
 fi
 
 if $W_FLAG; then
-  echo "Running -w: placeholder for -w command"
-  # Add your -w code here
+  echo "[Workload]"
+  java -cp $CLASSES:$LIB ISCS.WorkloadParser $CONFIG "$W_ARG"
 fi
-

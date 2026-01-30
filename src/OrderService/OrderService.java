@@ -37,7 +37,8 @@ public class OrderService extends MicroService {
 
     // allowed API endpoints
     private static String context = "/order";
-    private static String[] allowedContexts = {"/user", "/product"};
+    private static String userContext = "/user";
+    private static String productContext = "/product";
 
     // "database" (temp memory)
     private List<Order> orders = new ArrayList<>();
@@ -55,6 +56,8 @@ public class OrderService extends MicroService {
 
         super(ip, port);
         addContext(context, new OrderHandler());
+        addContext(userContext, new OrderHandler());
+        addContext(productContext, new OrderHandler());
 
         this.iscsIp = iscsIp;
         this.iscsPort = iscsPort;
@@ -68,13 +71,13 @@ public class OrderService extends MicroService {
         public void handle(HttpExchange exchange) throws IOException {
 
             String path = exchange.getRequestURI().getPath();
+            System.out.println(path);
             HttpResponse<String> resp;
 
             if (path.startsWith("/user") || path.startsWith("/product")) {
                 // forward to icsc
-                //
                 try {
-
+                    System.out.println("got the forward request part");
                     resp = HttpUtils.forwardRequest(exchange, iscsIp, iscsPort);
                     // forward response 
                     HttpUtils.forwardResponse(exchange, resp);

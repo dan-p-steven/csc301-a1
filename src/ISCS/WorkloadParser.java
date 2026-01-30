@@ -9,11 +9,18 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
+import com.google.gson.Gson;
+import java.lang.reflect.Type;
+import java.util.Map;
+import com.google.gson.reflect.TypeToken;
+
+import Shared.ServerConfig;
+
 public class WorkloadParser {
 
-    private static final String ORDER_SERVICE_URL = "http://127.0.0.1:14000";
+    private static String ORDER_SERVICE_URL;
 
-    public static void main(String[] args)
+    public static void main(String[] args) throws IOException
     {
         if (args.length < 1)
         {
@@ -21,7 +28,25 @@ public class WorkloadParser {
             return;
         }
 
-        String filename = args[0];
+        Gson gson = new Gson();
+
+        // get the config file path from user
+        String configPath = args[0];
+
+
+        // read from json file
+        Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
+        Map <String, ServerConfig> servers = gson.fromJson(new FileReader(configPath), type);
+
+        // get the config of the current server
+        ServerConfig orderConfig = servers.get("OrderService");
+        ORDER_SERVICE_URL = "http://" + orderConfig.ip + ":" + orderConfig.port;
+
+        System.out.println(ORDER_SERVICE_URL);
+
+        String filename = args[1];
+        System.out.println(filename);
+
         processWorkloadFile(filename);
     }
 
@@ -82,10 +107,12 @@ public class WorkloadParser {
                 if (command.equals("get"))
                 {
                     method = "GET";
+                    System.out.println(payload);
                 }
                 else
                 {
                     payload = buildUserJson(command, parts);
+                    System.out.println(payload);
                 }
                 break;
 
@@ -94,16 +121,19 @@ public class WorkloadParser {
                 if (command.equals("info"))
                 {
                     method = "GET";
+                    System.out.println(payload);
                 }
                 else
                 {
                    payload = buildProductJson(command, parts);
+                    System.out.println(payload);
                 }
                 break;
 
             case "ORDER":
                 endpoint = "/order";
                 payload = buildOrderJson(command, parts);
+                System.out.println(payload);
                 break;
             
             default:
