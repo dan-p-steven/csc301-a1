@@ -1,3 +1,8 @@
+/*
+ * A class representing the core business and routing logic of the ProductService.
+ *
+ * @author Daniel Steven
+ */
 package ProductService;
 
 import com.google.gson.Gson;
@@ -53,6 +58,12 @@ public class ProductService extends MicroService{
 
     }
 
+    /** 
+     * Create a new product given a POST request containing user information.
+     *
+     * @param HttpExchange to send the response
+     * @param object containing fields of product to create
+    */
     public void createProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
         // create a product
         //
@@ -96,6 +107,12 @@ public class ProductService extends MicroService{
         }
     }
 
+    /** 
+     * Update the information of a product
+     *
+     * @param HttpExchange to send the response
+     * @param object containing the information of the requested product
+     */
     public void updateProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
         for (Product p : this.products) {
 
@@ -130,6 +147,12 @@ public class ProductService extends MicroService{
         HttpUtils.sendHttpResponse(exchange, 400, "{}");
     }
 
+    /** 
+     * Delete a product form the database.
+     *
+     * @param httpexchange object for response 
+     * @param object containing information about the product to delete
+     */
     public void deleteProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
 
         if (req.getId() == null || req.getName() == null || req.getDescription() == null || req.getPrice() == null || req.getQuantity() == null) {
@@ -166,6 +189,9 @@ public class ProductService extends MicroService{
         }
     }
 
+    /**
+     * Implementation of HttpHandler to route requests and perform business logic 
+     */
     class ProductHandler implements HttpHandler {
 
         @Override
@@ -225,6 +251,12 @@ public class ProductService extends MicroService{
         }
     }
 
+    /**
+     * Retrieve information about a product based on their id
+     *
+     * @param HttpExchange object to send back a response
+     * @param api enpoint path of which product to get
+     */
     public void getProduct(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");

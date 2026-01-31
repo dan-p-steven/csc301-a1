@@ -1,3 +1,9 @@
+/*
+ * A class representing the data structure of JSON requests sent to the ProductService.
+ * This is a simple data holder class that does no computations.
+ *
+ * @author Daniel Steven
+ */
 package ProductService;
 
 public class ProductPostRequest {

@@ -1,3 +1,10 @@
+/*
+ * A class representing the data structure of JSON requests sent to the UserService.
+ * This is a simple data holder class that does no computations.
+ *
+ * @author Daniel Steven
+ */
+
 package UserService;
 
 public class UserPostRequest {

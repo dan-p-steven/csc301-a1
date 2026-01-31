@@ -1,3 +1,8 @@
+/**
+ * class containing a simple database implementation
+ *
+ * @author Daniel Steven
+ */
 package Shared;
 
 import com.google.gson.Gson;
@@ -15,6 +20,12 @@ public class ScuffedDatabase {
 
     private static Gson gson = new Gson();
 
+    /**
+     * write the database to file
+     *
+     * @param the database
+     * @param path of the file to be written to
+     */
     public static <T> void writeToFile(ArrayList<T> list, String filename) throws IOException {
 
         String json = gson.toJson(list);
@@ -24,6 +35,13 @@ public class ScuffedDatabase {
         writer.close();
     }
 
+
+    /** 
+     * read from the database file
+     *
+     * @param file path of database on disk
+     * @param type of ArrayList database will be read into
+     */
     public static <T> ArrayList<T> readFromFile(String filename, Type listType) throws IOException {
 
         try {

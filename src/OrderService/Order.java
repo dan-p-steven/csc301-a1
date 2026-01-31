@@ -1,3 +1,11 @@
+/*
+ * Represents the data structure for an "order". This is a simple data holder
+ * and performs no computations.
+ *
+ * @author Daniel Steven
+ *
+ */
+
 package OrderService;
 
 public class Order {

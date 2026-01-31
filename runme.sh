@@ -7,13 +7,14 @@ P_FLAG=false
 I_FLAG=false
 O_FLAG=false
 W_FLAG=false
+D_FLAG=false
 
 LIB="lib/gson-2.13.1.jar"
 CLASSES="compiled"
 CONFIG="config.json"
 
 # Parse flags
-while getopts "cupiow:" opt; do
+while getopts "cupdiow:" opt; do
   case $opt in
     c)
       C_FLAG=true
@@ -23,6 +24,9 @@ while getopts "cupiow:" opt; do
       ;;
     p)
       P_FLAG=true
+      ;;
+    d)
+      D_FLAG=true
       ;;
     i)
       I_FLAG=true
@@ -64,6 +68,10 @@ fi
 if $P_FLAG; then
   echo "[ProductService]"
   java -cp $CLASSES:$LIB ProductService.ProductService $CONFIG
+fi
+
+if $D_FLAG; then
+javadoc -cp $LIB -Xdoclint:none -d docs src/**/*.java
 fi
 
 if $I_FLAG; then

@@ -1,3 +1,8 @@
+/**
+ * Class containing shared http tools used by microservices
+ *
+ * @author Daniel Steven
+ */
 package Shared;
 
 import java.io.IOException;
@@ -15,6 +20,13 @@ import com.google.gson.Gson;
 
 public class HttpUtils {
 
+    /**
+     * send back a http response with specific parameters
+     *
+     * @param httpexchange object for response
+     * @param status code
+     * @param string body of the response
+     */
     public static void sendHttpResponse(HttpExchange exchange, int status, String data) throws IOException{
         // send a specific response back
 
@@ -34,6 +46,12 @@ public class HttpUtils {
 
     }
 
+    /**
+     * forward a response back to a client
+     *
+     * @param httpexchange object
+     * @param reponse to be forwarded
+     */
     public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) throws IOException {
         // forward a response without any doing anything to it
 
@@ -53,6 +71,16 @@ public class HttpUtils {
 
     }
 
+    /**
+     * forward a request to another server
+     *
+     * @param httpexchange object
+     * @param destination ip address
+     * @pram destination port
+     *
+     * @return response from server
+     *
+     */
     public static HttpResponse<String> forwardRequest(HttpExchange exchange, String destIp, int destPort) throws IOException, InterruptedException {
         // forward request to another machine
 
@@ -102,6 +130,16 @@ public class HttpUtils {
         return resp;
     }
 
+    /**
+     * send a POST request to a server 
+     *
+     * @param ip of the server
+     * @param port of the server
+     * @param endpoint you want to connect to 
+     * @param body of the message
+     *
+     * @return response from the server
+     */
     public static HttpResponse<String> sendPostRequest(String ip, int port, String endpoint, String body) throws IOException, InterruptedException {
 
         // create client
@@ -118,6 +156,16 @@ public class HttpUtils {
         HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
         return resp;
     }
+
+    /**
+     * send a GET request to a server 
+     *
+     * @param ip of the server
+     * @param port of the server
+     * @param endpoint you want to connect to 
+     *
+     * @return response from the server
+     */
 
     public static HttpResponse<String> sendGetRequest(String ip, int port, String endpoint) throws IOException, InterruptedException {
 

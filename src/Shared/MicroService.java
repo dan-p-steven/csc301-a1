@@ -1,3 +1,8 @@
+/**
+ * parent class containing the fundamental design of a microservice
+ *
+ * @author Daniel Steven
+ */
 package Shared;
 
 import com.sun.net.httpserver.HttpServer;
@@ -37,16 +42,3 @@ public class MicroService {
     }
 
 }
-
-// Testing purposes only.
-//    public static void main(String[] args) throws IOException{
-//
-//        String ip = "127.0.0.1";
-//        int port = 5050;
-//
-//        MicroService testServer = new MicroServer(ip, port);
-//        testServer.start();
-//        testServer.stop(5);
-//    }
-//
-//}

@@ -1,3 +1,11 @@
+/**
+ * Represents the data structure for a "product". This is a simple data holder
+ * and performs no computations.
+ *
+ * @author Daniel Steven
+ *
+ */
+
 package ProductService;
 
 public class Product {

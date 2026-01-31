@@ -1,3 +1,10 @@
+/**
+ *
+ * class containing shared security utilities
+ *
+ * @author Daniel Steven
+ */
+
 package Shared;
 
 import java.security.MessageDigest;
@@ -6,6 +13,12 @@ import java.security.NoSuchAlgorithmException;
 
 public class SecurityUtils {
 
+    /** return a sha256 hash of the password
+     *
+     * @param plain text of password
+     * 
+     * @return hashed password
+     */
     public static String SHA256Hash(String plaintext) {
         try {
 

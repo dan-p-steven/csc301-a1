@@ -1,3 +1,9 @@
+/*
+ * A class representing the core business and routing logic of the OrderService.
+ *
+ * @author Daniel Steven
+ */
+
 package OrderService;
 
 import com.google.gson.Gson;
@@ -33,24 +39,35 @@ import com.google.gson.reflect.TypeToken;
 
 public class OrderService extends MicroService {
 
+    /** Name of the service */
     private static String serverName = "OrderService";
 
-    // allowed API endpoints
+
+    /** Available contexts for the service */
     private static String context = "/order";
     private static String userContext = "/user";
     private static String productContext = "/product";
 
-    // "database" (temp memory)
+    /** Database (not used) */
     private List<Order> orders = new ArrayList<>();
 
+    /** JSON deserializer */
     private static Gson gson = new Gson();
 
-    // remember information about ISCS
+    /** IP and port information about ISCS */
     private String iscsIp;
     private int iscsPort;
 
+    /** Variable to track the Order ID */
     private int orderCount = 0;
 
+    /** Constructor for the OrderService class.
+     *
+     * @param IP of the service.
+     * @param Port of the service.
+     * @param IP of the ISCS
+     * @param Port of the ISCS
+     */
     public OrderService (String ip, int port,
                         String iscsIp, int iscsPort) throws IOException {
 
@@ -65,6 +82,7 @@ public class OrderService extends MicroService {
     }
 
 
+    /** Custom HttpHandler to implement business logic */
     class OrderHandler implements HttpHandler {
 
         @Override
@@ -99,6 +117,10 @@ public class OrderService extends MicroService {
         }
     }
 
+    /** Helper function for handling the OrderService routing and business logic.
+     *
+     * @param HttpExchange variable containing used to send back responses.
+     */
     private void _handleOrder(HttpExchange exchange) throws IOException {
         
         try {
@@ -204,6 +226,7 @@ public class OrderService extends MicroService {
 
     }
 
+    
     public static void main(String[] args) throws IOException {
 
         // get the config file path from user

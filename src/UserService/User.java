@@ -1,3 +1,12 @@
+
+/*
+ * Represents the data structure for a "user". This is a simple data holder
+ * and performs no computations.
+ *
+ * @author Daniel Steven
+ *
+ */
+
 package UserService;
 
 public class User {

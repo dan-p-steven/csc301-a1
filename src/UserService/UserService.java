@@ -1,3 +1,8 @@
+/*
+ * A class representing the core business and routing logic of the UserService.
+ *
+ * @author Daniel Steven
+ */
 package UserService;
 
 import com.google.gson.Gson;
@@ -52,6 +57,12 @@ public class UserService extends MicroService{
 
     }
 
+    /** 
+     * Create a new user given a POST request containing user information.
+     *
+     * @param HttpExchange to send the response
+     * @param object containing fields of user to create
+    */
     public void createUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
         // create a new user with hashed password 
@@ -89,6 +100,13 @@ public class UserService extends MicroService{
         }
     }
 
+
+    /** 
+     * Update the information of a user.
+     *
+     * @param HttpExchange to send the response
+     * @param object containing the information of the requested user
+     */
     public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
         for (User u : this.users) {
 
@@ -119,6 +137,13 @@ public class UserService extends MicroService{
         HttpUtils.sendHttpResponse(exchange, 400, "{}");
     }
 
+
+    /** 
+     * Delete a user form the database.
+     *
+     * @param httpexchange object for response 
+     * @param object containing information about the user to delete
+     */
     public void deleteUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
         if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
@@ -153,6 +178,9 @@ public class UserService extends MicroService{
         }
     }
 
+    /**
+     * Implementation of HttpHandler to route requests and perform business logic 
+     */
     class UserHandler implements HttpHandler {
 
         @Override
@@ -212,6 +240,12 @@ public class UserService extends MicroService{
         }
     }
 
+    /**
+     * Retrieve information about a user based on their id
+     *
+     * @param HttpExchange object to send back a response
+     * @param api enpoint path of which user to get
+     */
     public void getUser(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");
