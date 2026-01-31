@@ -43,13 +43,17 @@ done
 
 # Execute commands based on flags
 if $C_FLAG; then
-  echo "Running -c: compiling Java files..."
+  rm -rf data/
+  mkdir -p data/
+
+  echo "Compiling Java files..."
   javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
   src/ProductService/*.java \
   src/ISCS/*.java \
   src/OrderService/*.java
+  echo "SUCCESS"
 fi
 
 if $U_FLAG; then

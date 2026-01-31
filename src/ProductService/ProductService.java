@@ -12,6 +12,7 @@ import java.io.IOException;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import ProductService.Product;
 import Shared.MicroService;
 import Shared.SecurityUtils;
 import Shared.HttpUtils;
@@ -26,15 +27,18 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
+import Shared.ScuffedDatabase;
+
 public class ProductService extends MicroService{
 
     private static String serverName = "ProductService";
+    private static String dbPath = "data/products.json";
 
     // API endpoint
     private static String context = "/product";
 
     // "database" (temp memory)
-    private List<Product> products = new ArrayList<>();
+    private ArrayList<Product> products;
 
     private static Gson gson = new Gson();
 
@@ -43,6 +47,9 @@ public class ProductService extends MicroService{
         super(ip, port);
         addContext(context, new ProductHandler());
 
+        // Load users from file (or get empty ArrayList if file doesn't exist)
+        Type prodListTpye = new TypeToken<ArrayList<Product>>(){}.getType();
+        this.products = ScuffedDatabase.readFromFile(dbPath, prodListTpye);
 
     }
 
@@ -78,6 +85,9 @@ public class ProductService extends MicroService{
             // add new product to aatabase
             this.products.add(newProduct);
 
+            // write to file
+            ScuffedDatabase.writeToFile(this.products, dbPath);
+
             // convert to json
             String data = gson.toJson(newProduct);
 
@@ -108,7 +118,8 @@ public class ProductService extends MicroService{
                     p.setQuantity(req.getQuantity());
                 }
 
-                // success
+                // success , write updated db to file
+                ScuffedDatabase.writeToFile(this.products, dbPath);
                 String data = gson.toJson(p);
                 HttpUtils.sendHttpResponse(exchange, 200, data);
             }
@@ -138,6 +149,7 @@ public class ProductService extends MicroService{
                         // valid match
                         // delete u from users, return success
                         this.products.remove(p);
+                        ScuffedDatabase.writeToFile(this.products, dbPath);
                         HttpUtils.sendHttpResponse(exchange, 200, "{}");
                         break;
 

@@ -26,15 +26,18 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
+import Shared.ScuffedDatabase;
+
 public class UserService extends MicroService{
 
     private static String serverName = "UserService";
+    private static String dbPath = "data/users.json";
 
     // API endpoint
     private static String context = "/user";
 
     // "database" (temp memory)
-    private List<User> users = new ArrayList<>();
+    private ArrayList<User> users;
 
     private static Gson gson = new Gson();
 
@@ -43,6 +46,9 @@ public class UserService extends MicroService{
         super(ip, port);
         addContext(context, new UserHandler());
 
+        // Load users from file (or get empty ArrayList if file doesn't exist)
+        Type userListType = new TypeToken<ArrayList<User>>(){}.getType();
+        this.users = ScuffedDatabase.readFromFile(dbPath, userListType);
 
     }
 
@@ -72,6 +78,8 @@ public class UserService extends MicroService{
 
             // add to list
             this.users.add(newUser);
+            // write to file
+            ScuffedDatabase.writeToFile(this.users, dbPath);
 
             // turn user into json string
             String data = gson.toJson(newUser);
@@ -100,6 +108,7 @@ public class UserService extends MicroService{
                 }
 
                 // success
+                ScuffedDatabase.writeToFile(this.users, dbPath);
                 String data = gson.toJson(u);
                 HttpUtils.sendHttpResponse(exchange, 200, data);
             }
@@ -127,6 +136,7 @@ public class UserService extends MicroService{
                         // valid match
                         // delete u from users, return success
                         this.users.remove(u);
+                        ScuffedDatabase.writeToFile(this.users, dbPath);
                         HttpUtils.sendHttpResponse(exchange, 200, "{}");
                         break;
 
