@@ -57,6 +57,18 @@ public class UserService extends MicroService{
 
     }
 
+    // helper function to check if a string is valid (not empty or blank space or null)
+    private static boolean _invalid(String s) {
+        return s == null || s.isBlank();
+    }
+
+    // check if a user post request is invalid
+    private static boolean invalid(UserPostRequest req) {
+        if (_invalid(req.getEmail()) || _invalid(req.getUsername()) || _invalid(req.getPassword())) {
+            return true;
+        } else { return false; }
+    }
+
     /** 
      * Create a new user given a POST request containing user information.
      *
@@ -71,7 +83,7 @@ public class UserService extends MicroService{
 
 
         // all fields must be required.
-        if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
+        if (invalid(req)) {
             // return 400 error empty data
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         } else {
