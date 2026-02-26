@@ -12,15 +12,15 @@ package UserService;
 public class User {
 
     private int id;
-    private String email;
     private String username;
+    private String email;
     private String password;
     
     // Constructor
     public User(int id, String username, String email, String password) {
         this.id = id;
-        this.email = email;
         this.username = username;
+        this.email = email;
         this.password = password;
     }
     
