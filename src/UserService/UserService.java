@@ -73,14 +73,14 @@ public class UserService extends MicroService{
         // all fields must be required.
         if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
             // return 400 error empty data
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         } else {
             // check if the ids are dupe
             for (User u : this.users) {
                 if (u.getId() == req.getId()) {
 
                     // return 409 error
-                    HttpUtils.sendHttpResponse(exchange, 409, "{}");
+                    HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
                 }
             }
 
@@ -96,7 +96,7 @@ public class UserService extends MicroService{
             String data = gson.toJson(newUser);
 
             // return 200 success and object
-            HttpUtils.sendHttpResponse(exchange, 200, data);
+            HttpUtils.sendHttpResponse(exchange, 200, data); return;
         }
     }
 
@@ -128,13 +128,13 @@ public class UserService extends MicroService{
                 // success
                 ScuffedDatabase.writeToFile(this.users, dbPath);
                 String data = gson.toJson(u);
-                HttpUtils.sendHttpResponse(exchange, 200, data);
+                HttpUtils.sendHttpResponse(exchange, 200, data); return;
             }
         }
 
         // req not in list
         // return 400 {}
-        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
     }
 
 
@@ -148,7 +148,7 @@ public class UserService extends MicroService{
 
         if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
             // a value was null
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
             // not empty request, need to ensure user exists
@@ -162,19 +162,18 @@ public class UserService extends MicroService{
                         // delete u from users, return success
                         this.users.remove(u);
                         ScuffedDatabase.writeToFile(this.users, dbPath);
-                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                        break;
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
 
                     } else {
                         // invalid match
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
                     }
                 }
             }
 
             // user id DNE
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
     }
 
@@ -203,39 +202,33 @@ public class UserService extends MicroService{
 
                                 System.out.println("Create command detected!");
                                 createUser(exchange, req);
-                                break;
 
                             case "update":
 
                                 System.out.println("Update command detected!");
                                 updateUser(exchange, req);
-                                break;
 
                             case "delete":
 
                                 System.out.println("Delete command detected!");
                                 deleteUser(exchange, req);
-                                break;
 
                             default:
 
                                 // unknown post request, return some kind of error
-                                HttpUtils.sendHttpResponse(exchange, 400, "{}");
-                                break;
+                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
                         }
                     } catch (JsonSyntaxException e) {
                         // malformed json body
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
                     }
-                    break;
 
                 case "GET":
                     getUser(exchange, exchange.getRequestURI().getPath());
 
                 default:
                     // unknown http request method
-                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
-                    break;
+                    HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         }
     }
@@ -255,12 +248,12 @@ public class UserService extends MicroService{
         if (splitPath.length != 3) {
             // fail, 400 {}
             System.out.println("url path length not 2: " + splitPath.length);
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else if (!splitPath[1].equals(contextValue)) {
            // fail  400 {}
            System.out.println("first url path not 'user'");
-           HttpUtils.sendHttpResponse(exchange, 400, "{}");
+           HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
 
@@ -277,7 +270,7 @@ public class UserService extends MicroService{
 
                         // success, 200 and user
                         String data = gson.toJson(u);
-                        HttpUtils.sendHttpResponse(exchange, 200, data);
+                        HttpUtils.sendHttpResponse(exchange, 200, data); return;
 
                     }
                 }
@@ -286,12 +279,12 @@ public class UserService extends MicroService{
 
                 // there are letters in id , 400 {}
                 System.out.println("id not numeric");
-                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         }
 
         // user not found, return 404
-        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
     }
 
     public static void main(String[] args) throws IOException{

@@ -53,7 +53,7 @@ public class ScuffedDatabase {
             return list;
 
             } catch (FileNotFoundException e) {
-                System.out.println("File not found exception, created new list");
+                System.out.println("Database not found exception, creating new database");
                 return new ArrayList<T>();
         }
     }
