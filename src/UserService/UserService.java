@@ -214,16 +214,19 @@ public class UserService extends MicroService{
 
                                 System.out.println("Create command detected!");
                                 createUser(exchange, req);
+                                break;
 
                             case "update":
 
                                 System.out.println("Update command detected!");
                                 updateUser(exchange, req);
+                                break;
 
                             case "delete":
 
                                 System.out.println("Delete command detected!");
                                 deleteUser(exchange, req);
+                                break;
 
                             default:
 
@@ -235,8 +238,11 @@ public class UserService extends MicroService{
                         HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
                     }
 
+                    break;
+
                 case "GET":
                     getUser(exchange, exchange.getRequestURI().getPath());
+                    break;
 
                 default:
                     // unknown http request method
