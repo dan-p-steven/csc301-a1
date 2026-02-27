@@ -89,11 +89,17 @@ public class WorkloadParser {
 
     private static void parseAndSend(String line) throws IOException
     {
-        String[] parts = line.split ("\\s+");
-        if (parts.length < 2) return;
+       String[] parts = line.split ("\\s+");
+        if (parts.length == 0) return;
 
-        String type = parts[0].toUpperCase(); //USER, PRODUCT, ORDER
-        String command = parts[1].toLowerCase(); //create, get, update, delete
+        String type = parts[0].toUpperCase(); //SHUTDOWN, RESTART, USER, PRODUCT, ORDER,
+        
+        //skip malformed lines that aren't single-word commands
+        if (parts.length < 2 && !type.equals("SHUTDOWN") && !type.equals("RESTART")) {
+            return;
+        }
+
+        String command = (parts.length > 1) ? parts[1].toLowerCase() : "";
 
         String endpoint = "";
         String method = "POST";
@@ -102,6 +108,16 @@ public class WorkloadParser {
         //finds the endpoint and build JSON based on type
         switch(type)
         {
+            case "SHUTDOWN":
+                endpoint = "/shutdown";
+                payload = "{}";
+                break;
+
+            case "RESTART":
+                endpoint = "/restart";
+                payload = "{}";
+                break;
+
             case "USER":
                 endpoint = "/user";
                 if (command.equals("get"))
