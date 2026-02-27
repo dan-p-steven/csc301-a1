@@ -117,6 +117,39 @@ public class OrderService extends MicroService {
                     }
                 }
             }
+
+            if (path.equals("/shutdown"))
+            {
+                try
+                {//shut down backend service/iscs
+                    HttpUtils.sendPostRequest(iscsIp, iscsPort, "/user/shutdown", "{}");
+                    HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product/shutdown", "{}");
+                    HttpUtils.sendPostRequest(iscsIp, iscsPort, "/shutdown", "{}"); 
+                }
+                catch (Exception e)
+                {
+                    System.out.println("failed to shutdown");
+                }
+
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+
+                //kill this service
+                new Thread(() -> {
+                    try 
+                    {
+                        Thread.sleep(1000);
+                        System.exit(0);
+                    }
+                    catch (Exception e)
+                    {}
+                }).start();
+                return;
+            }
+
+            if (path.equals("/restart")) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                return;
+            }
             
             
             if (path.startsWith("/user") || path.startsWith("/product")) {
