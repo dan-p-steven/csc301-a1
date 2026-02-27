@@ -210,7 +210,26 @@ public class ProductService extends MicroService{
         public void handle(HttpExchange exchange) throws IOException {
 
             String method = exchange.getRequestMethod();
+            String path = exchange.getRequestURI().getPath();
             System.out.println(method);
+
+            if (path.equals("/product/wipe")) {
+                products.clear();
+                ScuffedDatabase.writeToFile(products, dbPath);
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                return;
+            }
+
+            if (path.equals("/product/shutdown")) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                new Thread(() -> {
+                    try {
+                        Thread.sleep(500);
+                        System.exit(0);
+                    } catch (Exception e) {}
+                }).start();
+                return;
+            }
 
             switch (method) {
                 case "POST":
