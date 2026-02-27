@@ -31,6 +31,14 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+
 import Shared.ScuffedDatabase;
 
 public class UserService extends MicroService{
@@ -44,7 +52,25 @@ public class UserService extends MicroService{
     // "database" (temp memory)
     private ArrayList<User> users;
 
-    private static Gson gson = new Gson();
+    //private static Gson gson = new Gson();
+    static Gson gson = new GsonBuilder()
+        .registerTypeAdapter(String.class, new TypeAdapter<String>() {
+            @Override
+            public String read(JsonReader in) throws IOException {
+                if (in.peek() != JsonToken.STRING) {
+                    throw new JsonParseException(
+                        "Expected a string but got: " + in.peek()
+                    );
+                }
+                return in.nextString();
+            }
+
+            @Override
+            public void write(JsonWriter out, String value) throws IOException {
+                out.value(value);
+            }
+        })
+        .create();
 
     public UserService (String ip, int port) throws IOException{
 
@@ -64,6 +90,12 @@ public class UserService extends MicroService{
 
     // check if a user post request is invalid
     private static boolean invalid(UserPostRequest req) {
+
+        if (req.getId() == null) {
+            return false;
+        }
+
+        // check if the string fields are not blank, null, or whitespace
         if (_invalid(req.getEmail()) || _invalid(req.getUsername()) || _invalid(req.getPassword())) {
             return true;
         } else { return false; }
@@ -120,6 +152,25 @@ public class UserService extends MicroService{
      * @param object containing the information of the requested user
      */
     public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
+
+        // check if the id is null
+        if (req.getId() == null) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
+
+        // chekc if req is invalid, return 400 if it is
+        // i'm doing this because i am checking if the fields are empty 
+        //
+        // but i also chekc for null, and reject null fields
+        // i can accept null fields
+        try {
+            if (req.getUsername().isBlank() || req.getEmail().isBlank() || req.getPassword().isBlank()) {
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+            }
+        } catch (Exception e) {
+
+        }
+
         for (User u : this.users) {
 
             if (u.getId() == req.getId()) {
@@ -146,7 +197,7 @@ public class UserService extends MicroService{
 
         // req not in list
         // return 400 {}
-        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
     }
 
 
@@ -177,15 +228,15 @@ public class UserService extends MicroService{
                         HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
 
                     } else {
-                        // invalid match
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+                        // user exists, but request supplied wrong password
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
 
                     }
                 }
             }
 
-            // user id DNE
-            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+            // user DNE, return 404
+            HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
         }
     }
 
@@ -219,6 +270,7 @@ public class UserService extends MicroService{
                             case "update":
 
                                 System.out.println("Update command detected!");
+                                System.out.println(req.getId());
                                 updateUser(exchange, req);
                                 break;
 
@@ -236,6 +288,11 @@ public class UserService extends MicroService{
                     } catch (JsonSyntaxException e) {
                         // malformed json body
                         HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+
+                    } catch (JsonParseException e) {
+                        // if field type is not according to object type, return 400
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+
                     }
 
                     break;

@@ -94,6 +94,9 @@ def extract_status_code(test_name):
 
 if __name__ == "__main__":
     run_tests(
+        #testcases_file="project_outline/CSC301_A1_testcases/payloads/product_testcases.json",
+        #responses_file="project_outline/CSC301_A1_testcases/responses/product_responses.json",
+        #base_url="http://localhost:14002"  # Change to your server URL
         testcases_file="project_outline/CSC301_A1_testcases/payloads/user_testcases.json",
         responses_file="project_outline/CSC301_A1_testcases/responses/user_responses.json",
         base_url="http://localhost:14833"  # Change to your server URL

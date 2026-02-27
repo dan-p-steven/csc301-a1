@@ -23,6 +23,14 @@ public class User {
         this.email = email;
         this.password = password;
     }
+
+    @Override
+    public String toString() {
+        return "id: " + id + "\n" + 
+               "username: " + username + "\n" +
+               "email: " + email + "\n" +
+               "password: " + password;
+    }
     
     // Getters
     public int getId() {
