@@ -9,8 +9,22 @@ Request: {
   "price": 162.58,
   "quantity": 90
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2000,
+  "name": "product2000",
+  "description": "This is product 2000",
+  "price": 162.58,
+  "quantity": 90
+}
+Expected Response: {
+  "id": 2000,
+  "name": "product2000",
+  "description": "This is product 2000",
+  "price": 162.58,
+  "quantity": 90
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2001
@@ -22,8 +36,22 @@ Request: {
   "price": 202.66,
   "quantity": 60
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2001,
+  "name": "product2001",
+  "description": "This is product 2001",
+  "price": 202.66,
+  "quantity": 60
+}
+Expected Response: {
+  "id": 2001,
+  "name": "product2001",
+  "description": "This is product 2001",
+  "price": 202.66,
+  "quantity": 60
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2002
@@ -35,8 +63,22 @@ Request: {
   "price": 98.47,
   "quantity": 96
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2002,
+  "name": "product2002",
+  "description": "This is product 2002",
+  "price": 98.47,
+  "quantity": 96
+}
+Expected Response: {
+  "id": 2002,
+  "name": "product2002",
+  "description": "This is product 2002",
+  "price": 98.47,
+  "quantity": 96
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2003
@@ -48,8 +90,22 @@ Request: {
   "price": 197.51,
   "quantity": 3
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2003,
+  "name": "product2003",
+  "description": "This is product 2003",
+  "price": 197.51,
+  "quantity": 3
+}
+Expected Response: {
+  "id": 2003,
+  "name": "product2003",
+  "description": "This is product 2003",
+  "price": 197.51,
+  "quantity": 3
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2004
@@ -61,8 +117,22 @@ Request: {
   "price": 98.61,
   "quantity": 26
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2004,
+  "name": "product2004",
+  "description": "This is product 2004",
+  "price": 98.61,
+  "quantity": 26
+}
+Expected Response: {
+  "id": 2004,
+  "name": "product2004",
+  "description": "This is product 2004",
+  "price": 98.61,
+  "quantity": 26
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2005
@@ -74,8 +144,22 @@ Request: {
   "price": 152.7,
   "quantity": 34
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2005,
+  "name": "product2005",
+  "description": "This is product 2005",
+  "price": 152.7,
+  "quantity": 34
+}
+Expected Response: {
+  "id": 2005,
+  "name": "product2005",
+  "description": "This is product 2005",
+  "price": 152.7,
+  "quantity": 34
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2006
@@ -87,8 +171,22 @@ Request: {
   "price": 269.23,
   "quantity": 89
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2006,
+  "name": "product2006",
+  "description": "This is product 2006",
+  "price": 269.23,
+  "quantity": 89
+}
+Expected Response: {
+  "id": 2006,
+  "name": "product2006",
+  "description": "This is product 2006",
+  "price": 269.23,
+  "quantity": 89
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2007
@@ -100,8 +198,22 @@ Request: {
   "price": 79.18,
   "quantity": 89
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2007,
+  "name": "product2007",
+  "description": "This is product 2007",
+  "price": 79.18,
+  "quantity": 89
+}
+Expected Response: {
+  "id": 2007,
+  "name": "product2007",
+  "description": "This is product 2007",
+  "price": 79.18,
+  "quantity": 89
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2008
@@ -113,8 +225,22 @@ Request: {
   "price": 77.68,
   "quantity": 79
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2008,
+  "name": "product2008",
+  "description": "This is product 2008",
+  "price": 77.68,
+  "quantity": 79
+}
+Expected Response: {
+  "id": 2008,
+  "name": "product2008",
+  "description": "This is product 2008",
+  "price": 77.68,
+  "quantity": 79
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2009
@@ -126,8 +252,22 @@ Request: {
   "price": 283.03,
   "quantity": 71
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2009,
+  "name": "product2009",
+  "description": "This is product 2009",
+  "price": 283.03,
+  "quantity": 71
+}
+Expected Response: {
+  "id": 2009,
+  "name": "product2009",
+  "description": "This is product 2009",
+  "price": 283.03,
+  "quantity": 71
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2010
@@ -139,8 +279,22 @@ Request: {
   "price": 37.32,
   "quantity": 75
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2010,
+  "name": "product2010",
+  "description": "This is product 2010",
+  "price": 37.32,
+  "quantity": 75
+}
+Expected Response: {
+  "id": 2010,
+  "name": "product2010",
+  "description": "This is product 2010",
+  "price": 37.32,
+  "quantity": 75
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2011
@@ -152,8 +306,22 @@ Request: {
   "price": 8.5,
   "quantity": 28
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2011,
+  "name": "product2011",
+  "description": "This is product 2011",
+  "price": 8.5,
+  "quantity": 28
+}
+Expected Response: {
+  "id": 2011,
+  "name": "product2011",
+  "description": "This is product 2011",
+  "price": 8.5,
+  "quantity": 28
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2012
@@ -165,8 +333,22 @@ Request: {
   "price": 173.31,
   "quantity": 74
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2012,
+  "name": "product2012",
+  "description": "This is product 2012",
+  "price": 173.31,
+  "quantity": 74
+}
+Expected Response: {
+  "id": 2012,
+  "name": "product2012",
+  "description": "This is product 2012",
+  "price": 173.31,
+  "quantity": 74
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2013
@@ -178,8 +360,22 @@ Request: {
   "price": 139.85,
   "quantity": 97
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2013,
+  "name": "product2013",
+  "description": "This is product 2013",
+  "price": 139.85,
+  "quantity": 97
+}
+Expected Response: {
+  "id": 2013,
+  "name": "product2013",
+  "description": "This is product 2013",
+  "price": 139.85,
+  "quantity": 97
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2014
@@ -191,8 +387,22 @@ Request: {
   "price": 157.0,
   "quantity": 35
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2014,
+  "name": "product2014",
+  "description": "This is product 2014",
+  "price": 157.0,
+  "quantity": 35
+}
+Expected Response: {
+  "id": 2014,
+  "name": "product2014",
+  "description": "This is product 2014",
+  "price": 157.0,
+  "quantity": 35
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2015
@@ -204,8 +414,22 @@ Request: {
   "price": 175.73,
   "quantity": 35
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2015,
+  "name": "product2015",
+  "description": "This is product 2015",
+  "price": 175.73,
+  "quantity": 35
+}
+Expected Response: {
+  "id": 2015,
+  "name": "product2015",
+  "description": "This is product 2015",
+  "price": 175.73,
+  "quantity": 35
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2016
@@ -217,8 +441,22 @@ Request: {
   "price": 52.38,
   "quantity": 19
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2016,
+  "name": "product2016",
+  "description": "This is product 2016",
+  "price": 52.38,
+  "quantity": 19
+}
+Expected Response: {
+  "id": 2016,
+  "name": "product2016",
+  "description": "This is product 2016",
+  "price": 52.38,
+  "quantity": 19
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2017
@@ -230,8 +468,22 @@ Request: {
   "price": 221.85,
   "quantity": 82
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2017,
+  "name": "product2017",
+  "description": "This is product 2017",
+  "price": 221.85,
+  "quantity": 82
+}
+Expected Response: {
+  "id": 2017,
+  "name": "product2017",
+  "description": "This is product 2017",
+  "price": 221.85,
+  "quantity": 82
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2018
@@ -243,8 +495,22 @@ Request: {
   "price": 111.86,
   "quantity": 14
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2018,
+  "name": "product2018",
+  "description": "This is product 2018",
+  "price": 111.86,
+  "quantity": 14
+}
+Expected Response: {
+  "id": 2018,
+  "name": "product2018",
+  "description": "This is product 2018",
+  "price": 111.86,
+  "quantity": 14
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_200_2019
@@ -256,8 +522,22 @@ Request: {
   "price": 209.2,
   "quantity": 51
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2019,
+  "name": "product2019",
+  "description": "This is product 2019",
+  "price": 209.2,
+  "quantity": 51
+}
+Expected Response: {
+  "id": 2019,
+  "name": "product2019",
+  "description": "This is product 2019",
+  "price": 209.2,
+  "quantity": 51
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_400_empty_name
@@ -269,8 +549,10 @@ Request: {
   "price": 2.3,
   "quantity": 4
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_400_missing_description
@@ -281,8 +563,10 @@ Request: {
   "price": 2.3,
   "quantity": 4
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_400_invalid_quantity_type
@@ -294,8 +578,10 @@ Request: {
   "price": 5.0,
   "quantity": 0.5597
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_400_negative_quantity
@@ -307,8 +593,10 @@ Request: {
   "price": 5.0,
   "quantity": -4
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_400_negative_price
@@ -320,8 +608,10 @@ Request: {
   "price": -5.0,
   "quantity": 4
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_create_409_duplicate_productID
@@ -333,8 +623,10 @@ Request: {
   "price": 5.0,
   "quantity": 9
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 409
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_update_200
@@ -346,8 +638,22 @@ Request: {
   "price": 199.99,
   "quantity": 100
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2001,
+  "name": "product2001-update",
+  "description": "This is product 2001 version 2",
+  "price": 199.99,
+  "quantity": 100
+}
+Expected Response: {
+  "id": 2001,
+  "name": "product2001-update",
+  "description": "This is product 2001 version 2",
+  "price": 199.99,
+  "quantity": 100
+}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_update_400_missing_id
@@ -355,7 +661,7 @@ Request: {
   "command": "update",
   "name": "product 2002 invalid update"
 }
-Error: Expecting value: line 1 column 1 (char 0)
+Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 Result: NOT MATCH ✗ (request failed)
 
 ======================================================================
@@ -365,8 +671,18 @@ Request: {
   "id": 2003,
   "description": ""
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2003,
+  "name": "product2003",
+  "description": "",
+  "price": 197.51,
+  "quantity": 3
+}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 400, got 200
+  - Body mismatch
 
 ======================================================================
 Test: product_update_400_negative_price
@@ -375,8 +691,18 @@ Request: {
   "id": 2004,
   "price": -6.0
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2004,
+  "name": "product2004",
+  "description": "This is product 2004",
+  "price": -6.0,
+  "quantity": 26
+}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 400, got 200
+  - Body mismatch
 
 ======================================================================
 Test: product_update_400_negative_quantity
@@ -385,8 +711,18 @@ Request: {
   "id": 2005,
   "quantity": -6
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 200
+Actual Response: {
+  "id": 2005,
+  "name": "product2005",
+  "description": "This is product 2005",
+  "price": 152.7,
+  "quantity": -6
+}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 400, got 200
+  - Body mismatch
 
 ======================================================================
 Test: product_update_400_invalid_quantity_type
@@ -395,8 +731,10 @@ Request: {
   "id": 2006,
   "quantity": 0.6
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_update_404_invalid_id
@@ -405,8 +743,11 @@ Request: {
   "id": 10000,
   "description": "this product doesn't exist ;)"
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 404, got 400
 
 ======================================================================
 Test: product_delete_200
@@ -417,8 +758,11 @@ Request: {
   "price": 79.18,
   "quantity": 89
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 200, got 400
 
 ======================================================================
 Test: product_delete_400_missing_name_field
@@ -428,8 +772,10 @@ Request: {
   "price": 77.68,
   "quantity": 79
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_delete_404_invalid_id
@@ -440,8 +786,11 @@ Request: {
   "price": 2.3,
   "quantity": 4
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 404, got 400
 
 ======================================================================
 Test: product_delete_404_401_fields_dont_match
@@ -452,15 +801,18 @@ Request: {
   "price": 280.0,
   "quantity": 71
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: NOT MATCH ✗
+  - Status mismatch: expected 404, got 400
 
 ======================================================================
 Test: product_get_200_product2001
 Request: {
   "id": 2001
 }
-Error: Expecting value: line 1 column 1 (char 0)
+Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 Result: NOT MATCH ✗ (request failed)
 
 ======================================================================
@@ -468,7 +820,7 @@ Test: product_get_200_product2010
 Request: {
   "id": 2010
 }
-Error: Expecting value: line 1 column 1 (char 0)
+Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 Result: NOT MATCH ✗ (request failed)
 
 ======================================================================
@@ -476,15 +828,17 @@ Test: product_get_400_invalid_type
 Request: {
   "id": "abcd"
 }
-Error: Expecting value: line 1 column 1 (char 0)
-Result: NOT MATCH ✗ (request failed)
+Status Code: 400
+Actual Response: {}
+Expected Response: {}
+Result: MATCH ✓
 
 ======================================================================
 Test: product_get_404_invalid_id_product2007
 Request: {
   "id": 2007
 }
-Error: Expecting value: line 1 column 1 (char 0)
+Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 Result: NOT MATCH ✗ (request failed)
 
 ======================================================================
@@ -492,12 +846,12 @@ Test: product_get_404_invalid_id
 Request: {
   "id": 10000
 }
-Error: Expecting value: line 1 column 1 (char 0)
+Error: ('Connection aborted.', RemoteDisconnected('Remote end closed connection without response'))
 Result: NOT MATCH ✗ (request failed)
 
 ======================================================================
 SUMMARY
 Total Tests: 42
-Matches: 0
-Mismatches: 42
-Success Rate: 0.0%
+Matches: 30
+Mismatches: 12
+Success Rate: 71.4%
