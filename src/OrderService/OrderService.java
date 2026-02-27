@@ -61,6 +61,8 @@ public class OrderService extends MicroService {
     /** Variable to track the Order ID */
     private int orderCount = 0;
 
+    private boolean isFirstCommand = true;
+
     /** Constructor for the OrderService class.
      *
      * @param IP of the service.
@@ -75,6 +77,8 @@ public class OrderService extends MicroService {
         addContext(context, new OrderHandler());
         addContext(userContext, new OrderHandler());
         addContext(productContext, new OrderHandler());
+        addContext("/shutdown", new OrderHandler()); 
+        addContext("/restart", new OrderHandler());
 
         this.iscsIp = iscsIp;
         this.iscsPort = iscsPort;
@@ -92,6 +96,29 @@ public class OrderService extends MicroService {
             System.out.println(path);
             HttpResponse<String> resp;
 
+            if (isFirstCommand)
+            {
+                isFirstCommand = false;
+                if (path.equals("/restart"))
+                {
+                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                    return;
+                }
+                else
+                {
+                    try
+                    {
+                        HttpUtils.sendPostRequest(iscsIp, iscsPort, "/user/wipe", "{}");
+                        HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product/wipe", "{}");
+                    }
+                    catch (Exception e)
+                    {
+                        System.out.println("failed to send wipe commands");
+                    }
+                }
+            }
+            
+            
             if (path.startsWith("/user") || path.startsWith("/product")) {
                 // forward to icsc
                 try {
