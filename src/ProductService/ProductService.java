@@ -58,6 +58,18 @@ public class ProductService extends MicroService{
 
     }
 
+    // helper function to check if a string is valid (not empty or blank space or null)
+    private static boolean _invalid(String s) {
+        return s == null || s.isBlank();
+    }
+
+    // check if a product post request is invalid
+    private static boolean invalid_strings(ProductPostRequest req) {
+        if (_invalid(req.getName()) || _invalid(req.getDescription())) {
+            return true;
+        } else { return false; }
+    }
+
     /** 
      * Create a new product given a POST request containing user information.
      *
@@ -68,7 +80,7 @@ public class ProductService extends MicroService{
         // create a product
         //
         // all fields must be required.
-        if (req.getId() == null || req.getName() == null || req.getDescription() == null || req.getPrice() == null || req.getQuantity() == null) {
+        if (req.getId() == null || invalid_strings(req) || req.getPrice() == null || req.getQuantity() == null) {
 
             // return 400 error empty data
             HttpUtils.sendHttpResponse(exchange, 400, "{}");
