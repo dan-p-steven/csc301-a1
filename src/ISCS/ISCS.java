@@ -34,6 +34,21 @@ public class ISCS extends MicroService
         
         // Route /product requests to the ProductService
         addContext("/product", new ForwardHandler(productServiceConfig));
+        addContext("/shutdown", exchange -> {
+            try {
+                exchange.getResponseHeaders().set("Content-Type", "application/json");
+                exchange.sendResponseHeaders(200, 2);
+                exchange.getResponseBody().write("{}".getBytes());
+                exchange.getResponseBody().close();
+            } catch (Exception e) {}
+
+            new Thread(() -> {
+                try {
+                    Thread.sleep(500);
+                    System.exit(0);
+                } catch (Exception e) {}
+            }).start();
+        });
     }
 
     static class ForwardHandler implements HttpHandler
