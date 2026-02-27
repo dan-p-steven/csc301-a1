@@ -83,13 +83,13 @@ public class ProductService extends MicroService{
         if (req.getId() == null || invalid_strings(req) || req.getPrice() == null || req.getQuantity() == null) {
 
             // return 400 error empty data
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
 
             if (req.getQuantity() < 0 || req.getPrice() < 0) {
                 // return 400 error
-                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
 
             // check for duplicate products
@@ -97,7 +97,7 @@ public class ProductService extends MicroService{
                 if (p.getId() == req.getId()) {
                     // found duplicate product
                     // return 409
-                    HttpUtils.sendHttpResponse(exchange, 409, "{}");
+                    HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
                 }
             }
 
@@ -114,7 +114,7 @@ public class ProductService extends MicroService{
             // convert to json
             String data = gson.toJson(newProduct);
 
-            HttpUtils.sendHttpResponse(exchange, 200, data);
+            HttpUtils.sendHttpResponse(exchange, 200, data); return;
 
         }
     }
@@ -126,6 +126,25 @@ public class ProductService extends MicroService{
      * @param object containing the information of the requested product
      */
     public void updateProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
+
+
+        // check if the id is null
+        if (req.getId() == null) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
+
+        System.out.println("desc: " + req.getDescription());
+        // can not have a blank/empty string name or description
+
+        if ((req.getName() != null && req.getName().isBlank()) || (req.getDescription() != null && req.getDescription().isBlank())) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
+
+        // negative price not allowed
+        if ((req.getPrice() != null && req.getPrice() < 0) || (req.getQuantity() != null && req.getQuantity() < 0)) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
+
         for (Product p : this.products) {
 
             if (p.getId() == req.getId()) {
@@ -150,13 +169,13 @@ public class ProductService extends MicroService{
                 // success , write updated db to file
                 ScuffedDatabase.writeToFile(this.products, dbPath);
                 String data = gson.toJson(p);
-                HttpUtils.sendHttpResponse(exchange, 200, data);
+                HttpUtils.sendHttpResponse(exchange, 200, data); return;
             }
         }
 
         // req not in list
         // return 400 {}
-        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
     }
 
     /** 
@@ -167,37 +186,38 @@ public class ProductService extends MicroService{
      */
     public void deleteProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
 
-        if (req.getId() == null || req.getName() == null || req.getDescription() == null || req.getPrice() == null || req.getQuantity() == null) {
+
+        if (req.getId() == null || req.getName() == null || req.getPrice() == null || req.getQuantity() == null) {
             // a value was null
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
+            System.out.println("["+ req.getId() + "]");
             // not empty request, need to ensure user exists
             for (Product p : this.products) {
+                System.out.println("\t"+ p.getId());
                 if (p.getId() == req.getId()) {
                     // found match
                     // need to validate values
                     if (p.getName().equals(req.getName()) &&
-                        p.getDescription().equals(req.getDescription()) && 
                         p.getPrice() == req.getPrice() &&
                         p.getQuantity() == req.getQuantity() ) {
                         // valid match
                         // delete u from users, return success
                         this.products.remove(p);
                         ScuffedDatabase.writeToFile(this.products, dbPath);
-                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                        break;
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
 
                     } else {
                         // invalid match
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
 
                     }
                 }
             }
 
             // user id DNE
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
         }
     }
 
@@ -255,29 +275,28 @@ public class ProductService extends MicroService{
 
                             case "delete":
 
-                                System.out.println("Delete command detected!");
+                                System.out.println("Delete command detected!" + req.getId());
                                 deleteProduct(exchange, req);
                                 break;
 
                             default:
 
                                 // unknown post request, return some kind of error
-                                HttpUtils.sendHttpResponse(exchange, 400, "{}");
-                                break;
+                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
                         }
                     } catch (JsonSyntaxException e) {
                         // malformed json body
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
                     }
+
                     break;
 
                 case "GET":
                     getProduct(exchange, exchange.getRequestURI().getPath());
-
+                    break;
                 default:
                     // unknown http request method
-                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
-                    break;
+                    HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         }
     }
@@ -297,7 +316,7 @@ public class ProductService extends MicroService{
         if (splitPath.length != 3) {
             // fail, 400 {}
             System.out.println("url path length not 2: " + splitPath.length);
-            HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else if (!splitPath[1].equals(contextValue)) {
 
@@ -305,7 +324,7 @@ public class ProductService extends MicroService{
            // fail  400 {}
             //
            System.out.println("first url path not '" + contextValue + "'");
-           HttpUtils.sendHttpResponse(exchange, 400, "{}");
+           HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
 
@@ -322,7 +341,7 @@ public class ProductService extends MicroService{
 
                         // success, 200 and user
                         String data = gson.toJson(p);
-                        HttpUtils.sendHttpResponse(exchange, 200, data);
+                        HttpUtils.sendHttpResponse(exchange, 200, data); return;
 
                     }
                 }
@@ -331,12 +350,12 @@ public class ProductService extends MicroService{
 
                 // there are letters in id , 400 {}
                 System.out.println("id not numeric");
-                HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         }
 
         // user not found, return 404
-        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
     }
 
     public static void main(String[] args) throws IOException{
