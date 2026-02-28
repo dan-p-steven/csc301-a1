@@ -310,51 +310,39 @@ public class ProductService extends MicroService{
     public void getProduct(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");
-        String contextValue = context.split("/")[1];
-        System.out.println(contextValue);
+        String query = exchange.getRequestURI().getQuery();
 
-        if (splitPath.length != 3) {
-            // fail, 400 {}
-            System.out.println("url path length not 2: " + splitPath.length);
-            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        int id = -1;
 
-        } else if (!splitPath[1].equals(contextValue)) {
-
-            // first string not contextValue
-           // fail  400 {}
-            //
-           System.out.println("first url path not '" + contextValue + "'");
-           HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-
+        if (query != null && query.startsWith("id=")) {
+            try {
+                id = Integer.parseInt(query.split("=")[1]);
+            } catch (NumberFormatException e) {
+                System.out.println("Error: query param id not numeric");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+            }
+        } else if (splitPath.length == 3) {
+            try {
+                id = Integer.parseInt(splitPath[2]);
+            } catch (Exception e) {
+                System.out.println("Path id not numeric");
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+            }
         } else {
 
-            // check if product id is a valid int in user database 
-            try {
+            // neither format matched, return error.
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
 
-                // try to turn id into int
-                int id = Integer.parseInt(splitPath[2]);
-                System.out.println(id);
-
-                // check if we have user with that id in db
-                for (Product p: this.products) {
-                    if (p.getId() == id) {
-
-                        // success, 200 and user
-                        String data = gson.toJson(p);
-                        HttpUtils.sendHttpResponse(exchange, 200, data); return;
-
-                    }
-                }
-
-            } catch (NumberFormatException e) {
-
-                // there are letters in id , 400 {}
-                System.out.println("id not numeric");
-                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        for (Product p: this.products) {
+            // if user found
+            if (p.getId() == id) {
+                String data = gson.toJson(p);
+                HttpUtils.sendHttpResponse(exchange, 200, data); return;
             }
         }
 
-        // user not found, return 404
+        // product not found
         HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
     }
 
