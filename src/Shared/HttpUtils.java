@@ -20,6 +20,11 @@ import com.google.gson.Gson;
 
 public class HttpUtils {
 
+    // One shared client for the lifetime of the application
+    private static final HttpClient CLIENT = HttpClient.newBuilder()
+        .version(HttpClient.Version.HTTP_1_1)
+        .build();
+
     /**
      * send back a http response with specific parameters
      *
@@ -63,8 +68,9 @@ public class HttpUtils {
         String contentType = response.headers().firstValue("Content-Type").orElse("application/json");
         exchange.getResponseHeaders().set("Content-Type", contentType);
 
+        byte[] responseBytes = responseBody.getBytes("UTF-8");
         // Send response back to original caller
-        exchange.sendResponseHeaders(statusCode, responseBody.length());
+        exchange.sendResponseHeaders(statusCode, responseBytes.length);
         OutputStream os = exchange.getResponseBody();
         os.write(responseBody.getBytes());
         os.close();
@@ -124,7 +130,7 @@ public class HttpUtils {
         // open client and send request
         HttpRequest forwardReq = builder.build();
         HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> resp = client.send(forwardReq, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> resp = CLIENT.send(forwardReq, HttpResponse.BodyHandlers.ofString());
 
         // return the response
         return resp;
@@ -153,7 +159,7 @@ public class HttpUtils {
         .build();
 
         // return reponse
-        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> resp = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
         return resp;
     }
 
@@ -180,7 +186,7 @@ public class HttpUtils {
         .build();
 
         // return response
-        HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+        HttpResponse<String> resp = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
 
         return resp;
     }

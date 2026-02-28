@@ -4,7 +4,7 @@ import json
 import json
 import requests
 
-def run_tests(testcases_file, responses_file, base_url):
+def run_tests(testcases_file, responses_file, base_url, endpoint):
     # Load test cases and expected responses
     with open(testcases_file, 'r') as f:
         test_cases = json.load(f)
@@ -32,8 +32,7 @@ def run_tests(testcases_file, responses_file, base_url):
         try:
             # Send HTTP POST request (adjust as needed)
             response = requests.post(
-                #f"{base_url}/user",
-                f"{base_url}/product",
+                f"{base_url}/{endpoint}",
                 json=request_payload,
                 timeout=10
             )
@@ -96,11 +95,23 @@ if __name__ == "__main__":
     run_tests(
         testcases_file="project_outline/CSC301_A1_testcases/payloads/product_testcases.json",
         responses_file="project_outline/CSC301_A1_testcases/responses/product_responses.json",
-        base_url="http://localhost:14002"  # Change to your server URL
-        #testcases_file="project_outline/CSC301_A1_testcases/payloads/user_testcases.json",
-        #responses_file="project_outline/CSC301_A1_testcases/responses/user_responses.json",
-        #base_url="http://localhost:14833"  # Change to your server URL
+        base_url="http://localhost:14002", # Change to your server URL,
+        endpoint="product"
         #testcases_file="project_outline/CSC301_A1_testcases/payloads/product_testcases.json",
         #responses_file="project_outline/CSC301_A1_testcases/responses/product_responses.json",
         #base_url="http://localhost:14002"  # Change to your server URL
     )
+
+    run_tests(
+        testcases_file="project_outline/CSC301_A1_testcases/payloads/user_testcases.json",
+        responses_file="project_outline/CSC301_A1_testcases/responses/user_responses.json",
+        base_url="http://localhost:14833",
+        endpoint="user"
+            )
+
+    run_tests(
+            testcases_file="project_outline/CSC301_A1_testcases/payloads/order_testcases.json",
+            responses_file="project_outline/CSC301_A1_testcases/responses/order_responses.json",
+            base_url="http://localhost:14133",
+            endpoint="order"
+            )

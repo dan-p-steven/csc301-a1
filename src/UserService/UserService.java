@@ -357,11 +357,15 @@ public class UserService extends MicroService{
         } else {
 
             // neither format matched, return error.
+            System.out.println("did not match format user");
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
+        System.out.println("[" + id + "]");
+        System.out.println(this.users.size());
         for (User u: this.users) {
             // if user found
+            System.out.println("\t" + u.getId());
             if (u.getId() == id) {
                 String data = gson.toJson(u);
                 HttpUtils.sendHttpResponse(exchange, 200, data); return;

@@ -309,6 +309,7 @@ public class ProductService extends MicroService{
      */
     public void getProduct(HttpExchange exchange, String path) throws IOException {
 
+        System.out.println(path);
         String[] splitPath = path.split("/");
         String query = exchange.getRequestURI().getQuery();
 
@@ -331,6 +332,7 @@ public class ProductService extends MicroService{
         } else {
 
             // neither format matched, return error.
+            System.out.println("did not match format");
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
