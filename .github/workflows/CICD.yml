@@ -59,10 +59,10 @@ jobs:
       # Start and Test Services
       - name: Start and Test Services
         run: |
-          ./runme.sh -u
-          ./runme.sh -o
-          ./runme.sh -p
-          ./runme.sh -i
+          ./runme.sh -u &
+          ./runme.sh -o &
+          ./runme.sh -p &
+          ./runme.sh -i &
           ./runme.sh -w project_outline/productWorkload.txt
 
       # Run Tests
