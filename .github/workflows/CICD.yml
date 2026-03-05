@@ -59,14 +59,14 @@ jobs:
       # Start and Test Services
       - name: Start and Test Services
         run: |
-          ./runme.sh -u & PID1=$!
-          ./runme.sh -o & PID2=$!
-          ./runme.sh -p & PID3=$!
-          ./runme.sh -i & PID4=$!
+          ./runme.sh -u & PID1=$! & echo $PID1
+          ./runme.sh -o & PID2=$! & echo $PID2
+          ./runme.sh -p & PID3=$! & echo $PID3
+          ./runme.sh -i & PID4=$! & echo $PID4
 
           ./runme.sh -w project_outline/productWorkload.txt
-          
-          sleep 30s
+
+          sleep 10s
           kill -- -$PID1
           kill -- -$PID2
           kill -- -$PID3
