@@ -15,7 +15,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains 2 jobs called "build-and-compile" and "test"
+  # This workflow contains a single job called "build-and-test"
   build-and-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -53,11 +53,11 @@ jobs:
           echo "Contents of site-packages: $(ls -l .venv/lib/python*/site-packages)"
 
       # Compile Services
-      - name: Compile & Start Services
+      - name: Compile Services
         run: ./runme.sh -c
 
-      # Start Services
-      - name: Start Services
+      # Start & Test Services
+      - name: Start & Test Services
         run: |
           ./runme.sh -u & PID1=$!
           ./runme.sh -o & PID2=$!
