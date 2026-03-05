@@ -15,7 +15,7 @@ on:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build-and-test"
+  # This workflow contains 2 jobs called "build-and-compile" and "test"
   build-and-test:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -59,15 +59,20 @@ jobs:
       # Start Services
       - name: Start Services
         run: |
-          ./runme.sh -u &
-          ./runme.sh -o &
-          ./runme.sh -p & 
-          ./runme.sh -i 
-      
-      # Test Workflow
-      - name: Test Workflow
-        run: |
+          ./runme.sh -u & PID1=$!
+          ./runme.sh -o & PID2=$!
+          ./runme.sh -p & PID3=$!
+          ./runme.sh -i & PID4=$!
+      # Run tests
           ./runme.sh -w project_outline/productWorkload.txt
+
+      # Give time before we end services
+          sleep 30s
+      # End all services to free ports
+          kill -- -$PID1
+          kill -- -$PID2
+          kill -- -$PID3
+          kill -- -$PID4
 
       # Run Tests
       # - name: Run Tests
