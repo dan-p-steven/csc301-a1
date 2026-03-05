@@ -51,8 +51,27 @@ jobs:
           echo "Working Directory $(pwd)"
           echo "Contents of Working Directory: $(ls -l)"
           echo "Contents of site-packages: $(ls -l .venv/lib/python*/site-packages)"
+
+      # Compile Services
+      - name: Compile & Start Services
+        run: ./runme.sh -c
+
+      # Start Services
+      - name: Start Services
+        run: |
+          ./runme.sh -u &
+          ./runme.sh -o &
+          ./runme.sh -p & 
+          ./runme.sh -i 
       
+      # Test Workflow
+      - name: Test Workflow
+        run: |
+          ./runme.sh -w project_outline/productWorkload.txt
+
       # Run Tests
       # - name: Run Tests
       #   run: |
       #     pytest
+
+
