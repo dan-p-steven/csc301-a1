@@ -63,11 +63,10 @@ jobs:
           ./runme.sh -o & PID2=$!
           ./runme.sh -p & PID3=$!
           ./runme.sh -i & PID4=$!
-      # Run tests
+
           ./runme.sh -w project_outline/productWorkload.txt
-      # Give time before we end services
+          
           sleep 30s
-      # End all services to free ports
           kill -- -$PID1
           kill -- -$PID2
           kill -- -$PID3
