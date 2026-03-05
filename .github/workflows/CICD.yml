@@ -56,8 +56,8 @@ jobs:
       - name: Compile Services
         run: ./runme.sh -c
 
-      # Start & Test Services
-      - name: Start & Test Services
+      # Start and Test Services
+      - name: Start and Test Services
         run: |
           ./runme.sh -u & PID1=$!
           ./runme.sh -o & PID2=$!
@@ -65,7 +65,6 @@ jobs:
           ./runme.sh -i & PID4=$!
       # Run tests
           ./runme.sh -w project_outline/productWorkload.txt
-
       # Give time before we end services
           sleep 30s
       # End all services to free ports
