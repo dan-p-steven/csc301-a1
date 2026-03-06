@@ -133,7 +133,6 @@ public class ProductService extends MicroService{
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        System.out.println("desc: " + req.getDescription());
         // can not have a blank/empty string name or description
 
         if ((req.getName() != null && req.getName().isBlank()) || (req.getDescription() != null && req.getDescription().isBlank())) {
@@ -192,10 +191,8 @@ public class ProductService extends MicroService{
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
 
         } else {
-            System.out.println("["+ req.getId() + "]");
             // not empty request, need to ensure user exists
             for (Product p : this.products) {
-                System.out.println("\t"+ p.getId());
                 if (p.getId() == req.getId()) {
                     // found match
                     // need to validate values
@@ -231,7 +228,6 @@ public class ProductService extends MicroService{
 
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
-            System.out.println(method);
 
             if (path.equals("/product/wipe")) {
                 products.clear();
@@ -263,19 +259,16 @@ public class ProductService extends MicroService{
 
                             case "create":
 
-                                System.out.println("Create command detected!");
                                 createProduct(exchange, req);
                                 break;
 
                             case "update":
 
-                                System.out.println("Update command detected!");
                                 updateProduct(exchange, req);
                                 break;
 
                             case "delete":
 
-                                System.out.println("Delete command detected!" + req.getId());
                                 deleteProduct(exchange, req);
                                 break;
 
@@ -309,7 +302,6 @@ public class ProductService extends MicroService{
      */
     public void getProduct(HttpExchange exchange, String path) throws IOException {
 
-        System.out.println(path);
         String[] splitPath = path.split("/");
         String query = exchange.getRequestURI().getQuery();
 
@@ -319,20 +311,17 @@ public class ProductService extends MicroService{
             try {
                 id = Integer.parseInt(query.split("=")[1]);
             } catch (NumberFormatException e) {
-                System.out.println("Error: query param id not numeric");
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else if (splitPath.length == 3) {
             try {
                 id = Integer.parseInt(splitPath[2]);
             } catch (Exception e) {
-                System.out.println("Path id not numeric");
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else {
 
             // neither format matched, return error.
-            System.out.println("did not match format");
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 

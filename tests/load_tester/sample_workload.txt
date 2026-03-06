@@ -1,0 +1,198 @@
+USER CREATE 1 daniel daniel@email.com password
+USER CREATE 2 daniel daniel@email.com password
+USER CREATE 3 daniel daniel@email.com password
+USER CREATE 4 daniel daniel@email.com password
+USER CREATE 5 daniel daniel@email.com password
+USER CREATE 6 daniel daniel@email.com password
+USER CREATE 7 daniel daniel@email.com password
+USER CREATE 8 daniel daniel@email.com password
+USER CREATE 9 daniel daniel@email.com password
+USER CREATE 10 daniel daniel@email.com password
+USER CREATE 11 daniel daniel@email.com password
+USER CREATE 12 daniel daniel@email.com password
+USER CREATE 13 daniel daniel@email.com password
+USER CREATE 14 daniel daniel@email.com password
+USER CREATE 15 daniel daniel@email.com password
+USER CREATE 16 daniel daniel@email.com password
+USER CREATE 17 daniel daniel@email.com password
+USER CREATE 18 daniel daniel@email.com password
+USER CREATE 19 daniel daniel@email.com password
+USER CREATE 20 daniel daniel@email.com password
+USER CREATE 21 daniel daniel@email.com password
+USER CREATE 22 daniel daniel@email.com password
+USER CREATE 23 daniel daniel@email.com password
+USER CREATE 24 daniel daniel@email.com password
+USER CREATE 25 daniel daniel@email.com password
+USER CREATE 26 daniel daniel@email.com password
+USER CREATE 27 daniel daniel@email.com password
+USER CREATE 28 daniel daniel@email.com password
+USER CREATE 29 daniel daniel@email.com password
+USER CREATE 30 daniel daniel@email.com password
+USER CREATE 31 daniel daniel@email.com password
+USER CREATE 32 daniel daniel@email.com password
+USER CREATE 33 daniel daniel@email.com password
+USER CREATE 34 daniel daniel@email.com password
+USER CREATE 35 daniel daniel@email.com password
+USER CREATE 36 daniel daniel@email.com password
+USER CREATE 37 daniel daniel@email.com password
+USER CREATE 38 daniel daniel@email.com password
+USER CREATE 39 daniel daniel@email.com password
+USER CREATE 40 daniel daniel@email.com password
+USER CREATE 41 daniel daniel@email.com password
+USER CREATE 42 daniel daniel@email.com password
+USER CREATE 43 daniel daniel@email.com password
+USER CREATE 44 daniel daniel@email.com password
+USER CREATE 45 daniel daniel@email.com password
+USER CREATE 46 daniel daniel@email.com password
+USER CREATE 47 daniel daniel@email.com password
+USER CREATE 48 daniel daniel@email.com password
+USER CREATE 49 daniel daniel@email.com password
+USER CREATE 50 daniel daniel@email.com password
+USER CREATE 51 daniel daniel@email.com password
+USER CREATE 52 daniel daniel@email.com password
+USER CREATE 53 daniel daniel@email.com password
+USER CREATE 54 daniel daniel@email.com password
+USER CREATE 55 daniel daniel@email.com password
+USER CREATE 56 daniel daniel@email.com password
+USER CREATE 57 daniel daniel@email.com password
+USER CREATE 58 daniel daniel@email.com password
+USER CREATE 59 daniel daniel@email.com password
+USER CREATE 60 daniel daniel@email.com password
+USER CREATE 61 daniel daniel@email.com password
+USER CREATE 62 daniel daniel@email.com password
+USER CREATE 63 daniel daniel@email.com password
+USER CREATE 64 daniel daniel@email.com password
+USER CREATE 65 daniel daniel@email.com password
+USER CREATE 66 daniel daniel@email.com password
+USER CREATE 67 daniel daniel@email.com password
+USER CREATE 68 daniel daniel@email.com password
+USER CREATE 69 daniel daniel@email.com password
+USER CREATE 70 daniel daniel@email.com password
+USER CREATE 71 daniel daniel@email.com password
+USER CREATE 72 daniel daniel@email.com password
+USER CREATE 73 daniel daniel@email.com password
+USER CREATE 74 daniel daniel@email.com password
+USER CREATE 75 daniel daniel@email.com password
+USER CREATE 76 daniel daniel@email.com password
+USER CREATE 77 daniel daniel@email.com password
+USER CREATE 78 daniel daniel@email.com password
+USER CREATE 79 daniel daniel@email.com password
+USER CREATE 80 daniel daniel@email.com password
+USER CREATE 81 daniel daniel@email.com password
+USER CREATE 82 daniel daniel@email.com password
+USER CREATE 83 daniel daniel@email.com password
+USER CREATE 84 daniel daniel@email.com password
+USER CREATE 85 daniel daniel@email.com password
+USER CREATE 86 daniel daniel@email.com password
+USER CREATE 87 daniel daniel@email.com password
+USER CREATE 88 daniel daniel@email.com password
+USER CREATE 89 daniel daniel@email.com password
+USER CREATE 90 daniel daniel@email.com password
+USER CREATE 91 daniel daniel@email.com password
+USER CREATE 92 daniel daniel@email.com password
+USER CREATE 93 daniel daniel@email.com password
+USER CREATE 94 daniel daniel@email.com password
+USER CREATE 95 daniel daniel@email.com password
+USER CREATE 96 daniel daniel@email.com password
+USER CREATE 97 daniel daniel@email.com password
+USER CREATE 98 daniel daniel@email.com password
+USER CREATE 99 daniel daniel@email.com password
+USER CREATE 100 daniel daniel@email.com password
+USER CREATE 101 daniel daniel@email.com password
+USER CREATE 102 daniel daniel@email.com password
+USER CREATE 103 daniel daniel@email.com password
+USER CREATE 104 daniel daniel@email.com password
+USER CREATE 105 daniel daniel@email.com password
+USER CREATE 106 daniel daniel@email.com password
+USER CREATE 107 daniel daniel@email.com password
+USER CREATE 108 daniel daniel@email.com password
+USER CREATE 109 daniel daniel@email.com password
+USER CREATE 110 daniel daniel@email.com password
+PRODUCT CREATE 1 cheese "aged cheese" 20.99 2
+USER DELETE 1 daniel daniel@hotmail.com password
+USER UPDATE 1
+USER UPDATE 1 username:daniel password:pass email:newemail@mail.com
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2
+USER GET 2

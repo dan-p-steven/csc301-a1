@@ -250,7 +250,6 @@ public class UserService extends MicroService{
 
             String method = exchange.getRequestMethod();
             String path = exchange.getRequestURI().getPath();
-            System.out.println(method);
 
             if (path.equals("/user/wipe")) {
                 users.clear();
@@ -282,20 +281,16 @@ public class UserService extends MicroService{
 
                             case "create":
 
-                                System.out.println("Create command detected!");
                                 createUser(exchange, req);
                                 break;
 
                             case "update":
 
-                                System.out.println("Update command detected!");
-                                System.out.println(req.getId());
                                 updateUser(exchange, req);
                                 break;
 
                             case "delete":
 
-                                System.out.println("Delete command detected!");
                                 deleteUser(exchange, req);
                                 break;
 
@@ -344,28 +339,22 @@ public class UserService extends MicroService{
             try {
                 id = Integer.parseInt(query.split("=")[1]);
             } catch (NumberFormatException e) {
-                System.out.println("Error: query param id not numeric");
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else if (splitPath.length == 3) {
             try {
                 id = Integer.parseInt(splitPath[2]);
             } catch (Exception e) {
-                System.out.println("Path id not numeric");
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else {
 
             // neither format matched, return error.
-            System.out.println("did not match format user");
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        System.out.println("[" + id + "]");
-        System.out.println(this.users.size());
         for (User u: this.users) {
             // if user found
-            System.out.println("\t" + u.getId());
             if (u.getId() == id) {
                 String data = gson.toJson(u);
                 HttpUtils.sendHttpResponse(exchange, 200, data); return;

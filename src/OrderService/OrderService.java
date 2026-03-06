@@ -113,7 +113,6 @@ public class OrderService extends MicroService {
         public void handle(HttpExchange exchange) throws IOException {
 
             String path = exchange.getRequestURI().getPath();
-            System.out.println(path);
             HttpResponse<String> resp;
 
             if (isFirstCommand)
@@ -184,7 +183,6 @@ public class OrderService extends MicroService {
             if (path.startsWith("/user") || path.startsWith("/product")) {
                 // forward to icsc
                 try {
-                    System.out.println("got the forward request part");
                     resp = HttpUtils.forwardRequest(exchange, iscsIp, iscsPort);
                     // forward response 
                     HttpUtils.forwardResponse(exchange, resp);
@@ -217,22 +215,18 @@ public class OrderService extends MicroService {
         OrderResponse ordResp;
         String method = exchange.getRequestMethod();
 
-        System.out.println("got here in handleorder");
         if (method.equals("POST")) {
 
-            System.out.println("got here in method equals post");
 
             // convert to request object
             InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
 
             OrderRequest req = gson.fromJson(reader, OrderRequest.class);
-            System.out.println("req:\n\tcomm "+req.getCommand()+"\n\tuid "+req.getUserId()+"\n\tpid "+req.getProductId()+"\n\tquant "+req.getQuantity());
 
             // extract command
             if (req.getCommand().equals("place order")) {
                 // verify if user id exists
                 //try
-                System.out.println("commanmd is place order");
                 try {
                     // can not order less than 0 quantity
                     //
@@ -247,7 +241,6 @@ public class OrderService extends MicroService {
                     HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/"+req.getUserId());
 
 
-                    System.out.println("GET on user " + req.getUserId() + ":" + userResp.statusCode());
                     // enough to check status
                     if (userResp.statusCode() != 200) {
                         // user doesn't exist
@@ -260,7 +253,6 @@ public class OrderService extends MicroService {
 
                     HttpResponse<String> prodResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId());
 
-                    System.out.println("status code prod" + prodResp.statusCode());
                     if (prodResp.statusCode() != 200) {
                         // prod doesnt exist or malformed 
                         // 400 {}
@@ -272,13 +264,11 @@ public class OrderService extends MicroService {
                     // prdocut exists 
                     // need to check quantity
                     Product p = gson.fromJson(prodResp.body(), Product.class);
-                    System.out.println("product found, quant: " + p.getQuantity());
                     if (p.getQuantity() > req.getQuantity()) {
                         // enough quant
                         // place update order on product
                         ProductPostRequest prodUpdateReq = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
                         String prodUpdateReqBody = gson.toJson(prodUpdateReq);
-                        System.out.println(prodUpdateReqBody);
                         HttpResponse<String> prodUpdateResp = HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", prodUpdateReqBody);
 
                         Product updatedProd = gson.fromJson(prodUpdateResp.body(), Product.class);

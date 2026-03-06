@@ -67,7 +67,6 @@ public class ISCS extends MicroService
             String path = exchange.getRequestURI().toString();
             String targetUrlString = "http://" + targetConfig.ip + ":" + targetConfig.port + path;
 
-            System.out.println("[ISCS] Forwarding "+ exchange.getRequestMethod() + " request to: " + targetUrlString);
 
             //open connection to target service
             URL targetUrl = new URL(targetUrlString);
