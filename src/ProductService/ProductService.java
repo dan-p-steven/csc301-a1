@@ -9,303 +9,153 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream.GetField;
-import java.security.Security;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
-import ProductService.Product;
 import Shared.MicroService;
-import Shared.SecurityUtils;
 import Shared.HttpUtils;
 import Shared.ServerConfig;
 
-import java.util.ArrayList;
-import java.util.List;
-
-// These are to load server config
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
-import Shared.ScuffedDatabase;
+public class ProductService extends MicroService {
 
-public class ProductService extends MicroService{
+    private static final String SERVER_NAME = "ProductService";
+    private static final String CONTEXT     = "/product";
 
-    private static String serverName = "ProductService";
-    private static String dbPath = "data/products.json";
+    private static final Gson gson = new Gson();
 
-    // API endpoint
-    private static String context = "/product";
+    private final ProductDatabaseManager db;
 
-    // "database" (temp memory)
-    private ArrayList<Product> products;
+    // ------------------------------------------------------------------
+    // Constructor
+    // ------------------------------------------------------------------
 
-    private static Gson gson = new Gson();
-
-    public ProductService (String ip, int port) throws IOException{
-
+    public ProductService(String ip, int port, String jdbcUrl, String dbUser, String dbPassword)
+            throws IOException, SQLException {
         super(ip, port);
-        addContext(context, new ProductHandler());
-
-        // Load users from file (or get empty ArrayList if file doesn't exist)
-        Type prodListTpye = new TypeToken<ArrayList<Product>>(){}.getType();
-        this.products = ScuffedDatabase.readFromFile(dbPath, prodListTpye);
-
+        addContext(CONTEXT, new ProductHandler());
+        this.db = new ProductDatabaseManager(jdbcUrl, dbUser, dbPassword);
     }
 
-    // helper function to check if a string is valid (not empty or blank space or null)
+    // ------------------------------------------------------------------
+    // Validation helpers
+    // ------------------------------------------------------------------
+
     private static boolean _invalid(String s) {
         return s == null || s.isBlank();
     }
 
-    // check if a product post request is invalid
-    private static boolean invalid_strings(ProductPostRequest req) {
-        if (_invalid(req.getName()) || _invalid(req.getDescription())) {
-            return true;
-        } else { return false; }
+    private static boolean invalidStrings(ProductPostRequest req) {
+        return _invalid(req.getName()) || _invalid(req.getDescription());
     }
 
-    /** 
-     * Create a new product given a POST request containing user information.
-     *
-     * @param HttpExchange to send the response
-     * @param object containing fields of product to create
-    */
+    // ------------------------------------------------------------------
+    // CRUD
+    // ------------------------------------------------------------------
+
     public void createProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
-        // create a product
-        //
-        // all fields must be required.
-        if (req.getId() == null || invalid_strings(req) || req.getPrice() == null || req.getQuantity() == null) {
 
-            // return 400 error empty data
+        if (req.getId() == null || invalidStrings(req)
+                || req.getPrice() == null || req.getQuantity() == null) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
 
-        } else {
+        if (req.getQuantity() < 0 || req.getPrice() < 0) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
 
-            if (req.getQuantity() < 0 || req.getPrice() < 0) {
-                // return 400 error
-                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        try {
+            Product newProduct = new Product(
+                req.getId(), req.getName(), req.getDescription(),
+                req.getPrice(), req.getQuantity()
+            );
+
+            boolean inserted = db.insert(newProduct);
+
+            if (!inserted) {
+                HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
             }
 
-            // check for duplicate products
-            for (Product p: this.products) {
-                if (p.getId() == req.getId()) {
-                    // found duplicate product
-                    // return 409
-                    HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
-                }
-            }
+            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newProduct));
 
-            // no dupes, is success
-            // return 200 and product object
-            Product newProduct = new Product(req.getId(), req.getName(), req.getDescription(), req.getPrice(), req.getQuantity());
-
-            // add new product to aatabase
-            this.products.add(newProduct);
-
-            // write to file
-            ScuffedDatabase.writeToFile(this.products, dbPath);
-
-            // convert to json
-            String data = gson.toJson(newProduct);
-
-            HttpUtils.sendHttpResponse(exchange, 200, data); return;
-
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
         }
     }
 
-    /** 
-     * Update the information of a product
-     *
-     * @param HttpExchange to send the response
-     * @param object containing the information of the requested product
-     */
     public void updateProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
 
-
-        // check if the id is null
         if (req.getId() == null) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        // can not have a blank/empty string name or description
-
-        if ((req.getName() != null && req.getName().isBlank()) || (req.getDescription() != null && req.getDescription().isBlank())) {
+        if ((req.getName() != null && req.getName().isBlank())
+                || (req.getDescription() != null && req.getDescription().isBlank())) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        // negative price not allowed
-        if ((req.getPrice() != null && req.getPrice() < 0) || (req.getQuantity() != null && req.getQuantity() < 0)) {
+        if ((req.getPrice() != null && req.getPrice() < 0)
+                || (req.getQuantity() != null && req.getQuantity() < 0)) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        for (Product p : this.products) {
+        try {
+            boolean updated = db.update(
+                req.getId(), req.getName(), req.getDescription(),
+                req.getPrice(), req.getQuantity()
+            );
 
-            if (p.getId() == req.getId()) {
-
-                // update fields
-                if (req.getName() != null) {
-                    p.setName(req.getName());
-                }
-
-                if (req.getDescription() != null) {
-                    p.setDescription(req.getDescription());
-                }
-
-                if (req.getPrice() != null) {
-                    p.setPrice(req.getPrice());
-                }
-
-                if (req.getQuantity() != null) {
-                    p.setQuantity(req.getQuantity());
-                }
-
-                // success , write updated db to file
-                ScuffedDatabase.writeToFile(this.products, dbPath);
-                String data = gson.toJson(p);
-                HttpUtils.sendHttpResponse(exchange, 200, data); return;
+            if (!updated) {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
             }
-        }
 
-        // req not in list
-        // return 400 {}
-        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+            // re-fetch the updated row to return it in the response
+            Product updatedProduct = db.getById(req.getId());
+            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedProduct));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
+        }
     }
 
-    /** 
-     * Delete a product form the database.
-     *
-     * @param httpexchange object for response 
-     * @param object containing information about the product to delete
-     */
     public void deleteProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
 
-
-        if (req.getId() == null || req.getName() == null || req.getPrice() == null || req.getQuantity() == null) {
-            // a value was null
+        if (req.getId() == null || req.getName() == null
+                || req.getPrice() == null || req.getQuantity() == null) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
 
-        } else {
-            // not empty request, need to ensure user exists
-            for (Product p : this.products) {
-                if (p.getId() == req.getId()) {
-                    // found match
-                    // need to validate values
-                    if (p.getName().equals(req.getName()) &&
-                        p.getPrice() == req.getPrice() &&
-                        p.getQuantity() == req.getQuantity() ) {
-                        // valid match
-                        // delete u from users, return success
-                        this.products.remove(p);
-                        ScuffedDatabase.writeToFile(this.products, dbPath);
-                        HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
+        try {
+            boolean deleted = db.delete(
+                req.getId(), req.getName(), req.getPrice(), req.getQuantity()
+            );
 
-                    } else {
-                        // invalid match
-                        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
-
-                    }
-                }
+            if (deleted) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+            } else {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}");
             }
 
-            // user id DNE
-            HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
         }
     }
 
-    /**
-     * Implementation of HttpHandler to route requests and perform business logic 
-     */
-    class ProductHandler implements HttpHandler {
-
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-
-            String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath();
-
-            if (path.equals("/product/wipe")) {
-                products.clear();
-                ScuffedDatabase.writeToFile(products, dbPath);
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                return;
-            }
-
-            if (path.equals("/product/shutdown")) {
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(500);
-                        System.exit(0);
-                    } catch (Exception e) {}
-                }).start();
-                return;
-            }
-
-            switch (method) {
-                case "POST":
-
-                    InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
-
-                    try {
-                        ProductPostRequest req = gson.fromJson(reader, ProductPostRequest.class);
-
-                        switch (req.getCommand()) {
-
-                            case "create":
-
-                                createProduct(exchange, req);
-                                break;
-
-                            case "update":
-
-                                updateProduct(exchange, req);
-                                break;
-
-                            case "delete":
-
-                                deleteProduct(exchange, req);
-                                break;
-
-                            default:
-
-                                // unknown post request, return some kind of error
-                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-                        }
-                    } catch (JsonSyntaxException e) {
-                        // malformed json body
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-                    }
-
-                    break;
-
-                case "GET":
-                    getProduct(exchange, exchange.getRequestURI().getPath());
-                    break;
-                default:
-                    // unknown http request method
-                    HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-            }
-        }
-    }
-
-    /**
-     * Retrieve information about a product based on their id
-     *
-     * @param HttpExchange object to send back a response
-     * @param api enpoint path of which product to get
-     */
     public void getProduct(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");
-        String query = exchange.getRequestURI().getQuery();
-
-        int id = -1;
+        String   query     = exchange.getRequestURI().getQuery();
+        int      id        = -1;
 
         if (query != null && query.startsWith("id=")) {
             try {
@@ -320,37 +170,106 @@ public class ProductService extends MicroService{
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else {
-
-            // neither format matched, return error.
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        for (Product p: this.products) {
-            // if user found
-            if (p.getId() == id) {
-                String data = gson.toJson(p);
-                HttpUtils.sendHttpResponse(exchange, 200, data); return;
-            }
-        }
+        try {
+            Product p = db.getById(id);
 
-        // product not found
-        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+            if (p != null) {
+                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(p));
+            } else {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
+        }
     }
 
-    public static void main(String[] args) throws IOException{
+    // ------------------------------------------------------------------
+    // HTTP routing
+    // ------------------------------------------------------------------
 
-        // get the config file path from user
+    class ProductHandler implements HttpHandler {
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+
+            String method = exchange.getRequestMethod();
+            String path   = exchange.getRequestURI().getPath();
+
+            if (path.equals("/product/wipe")) {
+                try {
+                    db.wipe();
+                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                }
+                return;
+            }
+
+            if (path.equals("/product/shutdown")) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                new Thread(() -> {
+                    try { Thread.sleep(500); System.exit(0); }
+                    catch (Exception e) {}
+                }).start();
+                return;
+            }
+
+            switch (method) {
+                case "POST":
+                    InputStreamReader reader =
+                        new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+                    try {
+                        ProductPostRequest req = gson.fromJson(reader, ProductPostRequest.class);
+                        switch (req.getCommand()) {
+                            case "create": createProduct(exchange, req); break;
+                            case "update": updateProduct(exchange, req); break;
+                            case "delete": deleteProduct(exchange, req); break;
+                            default:
+                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+                        }
+                    } catch (JsonSyntaxException e) {
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                    }
+                    break;
+
+                case "GET":
+                    getProduct(exchange, path);
+                    break;
+
+                default:
+                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Entry point
+    // ------------------------------------------------------------------
+
+    public static void main(String[] args) throws IOException, SQLException {
+
         String configPath = args[0];
 
-        // read from json file
         Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
-        Map <String, ServerConfig> servers = gson.fromJson(new FileReader(configPath), type);
+        Map<String, ServerConfig> servers =
+            gson.fromJson(new FileReader(configPath), type);
 
-        // get the config of the current server
-        ServerConfig config = servers.get(serverName);
+        ServerConfig config = servers.get(SERVER_NAME);
 
-        ProductService service = new ProductService(config.ip, config.port);
+        ProductService service = new ProductService(
+            config.ip,
+            config.port,
+            config.db.url,
+            config.db.user,
+            config.db.password
+        );
+
         service.start();
-        //service.stop(5);
     }
 }

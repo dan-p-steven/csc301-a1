@@ -19,6 +19,7 @@ public class ProductDatabaseManager {
     public ProductDatabaseManager(String jdbcUrl, String user, String password)
             throws SQLException {
         this.conn = DriverManager.getConnection(jdbcUrl, user, password);
+        this.conn.setAutoCommit(true); // add this
         createTable();
     }
 

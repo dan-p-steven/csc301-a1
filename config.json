@@ -1,18 +1,28 @@
 {
   "UserService": {
         "port": 14833,
-        "ip": "142.1.46.96"
-    }   ,
-    "OrderService": {
-        "port": 14133,
-        "ip": "142.1.46.96"
+        "ip": "127.0.0.1",
+        "db": {
+            "url": "jdbc:postgresql://localhost:14441/users_db",
+            "user": "stevenda",
+            "password": "chezborgor"
+        }
     }   ,
     "ProductService": {
         "port": 14002,
-        "ip": "142.1.46.96"
+        "ip": "127.0.0.1",
+        "db": {
+            "url": "jdbc:postgresql://localhost:14441/products_db",
+            "user": "stevenda",
+            "password": "chezborgor"
+        }
+    }   ,
+    "OrderService": {
+        "port": 14133,
+        "ip": "127.0.0.1"
     }   ,
     "InterServiceCommunication": {
         "port": 14000,
-        "ip": "142.1.46.96"
-    }   
+        "ip": "127.0.0.1"
+    }
 }

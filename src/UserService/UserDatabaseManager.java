@@ -21,6 +21,7 @@ public class UserDatabaseManager {
     public UserDatabaseManager(String jdbcUrl, String user, String password)
             throws SQLException {
         this.conn = DriverManager.getConnection(jdbcUrl, user, password);
+        this.conn.setAutoCommit(true); // add this
         createTable();
     }
 
@@ -76,12 +77,15 @@ public class UserDatabaseManager {
             ps.setInt(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    System.out.println("found user"); // add this
                     return new User(
                         rs.getInt("id"),
                         rs.getString("username"),
                         rs.getString("email"),
                         rs.getString("password")
                     );
+                } else {
+                    System.out.println("no user found");
                 }
             }
         }

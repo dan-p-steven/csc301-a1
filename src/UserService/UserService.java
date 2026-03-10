@@ -6,13 +6,17 @@
 package UserService;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream.GetField;
-import java.security.Security;
-import java.util.ArrayList;
 import java.io.IOException;
+import java.sql.SQLException;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -22,37 +26,16 @@ import Shared.SecurityUtils;
 import Shared.HttpUtils;
 import Shared.ServerConfig;
 
-import java.util.ArrayList;
-import java.util.List;
-
-// These are to load server config
 import java.io.FileReader;
 import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonParseException;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
+public class UserService extends MicroService {
 
-import Shared.ScuffedDatabase;
+    private static final String SERVER_NAME = "UserService";
+    private static final String CONTEXT     = "/user";
 
-public class UserService extends MicroService{
-
-    private static String serverName = "UserService";
-    private static String dbPath = "data/users.json";
-
-    // API endpoint
-    private static String context = "/user";
-
-    // "database" (temp memory)
-    private ArrayList<User> users;
-
-    //private static Gson gson = new Gson();
     static Gson gson = new GsonBuilder()
         .registerTypeAdapter(String.class, new TypeAdapter<String>() {
             @Override
@@ -64,7 +47,6 @@ public class UserService extends MicroService{
                 }
                 return in.nextString();
             }
-
             @Override
             public void write(JsonWriter out, String value) throws IOException {
                 out.value(value);
@@ -72,268 +54,133 @@ public class UserService extends MicroService{
         })
         .create();
 
-    public UserService (String ip, int port) throws IOException{
+    private final UserDatabaseManager db;
 
+    // ------------------------------------------------------------------
+    // Constructor
+    // ------------------------------------------------------------------
+
+    public UserService(String ip, int port, String jdbcUrl, String dbUser, String dbPassword)
+            throws IOException, SQLException {
         super(ip, port);
-        addContext(context, new UserHandler());
-
-        // Load users from file (or get empty ArrayList if file doesn't exist)
-        Type userListType = new TypeToken<ArrayList<User>>(){}.getType();
-        this.users = ScuffedDatabase.readFromFile(dbPath, userListType);
-
+        addContext(CONTEXT, new UserHandler());
+        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword);
     }
 
-    // helper function to check if a string is valid (not empty or blank space or null)
+    // ------------------------------------------------------------------
+    // Validation helpers
+    // ------------------------------------------------------------------
+
     private static boolean _invalid(String s) {
         return s == null || s.isBlank();
     }
 
-    // check if a user post request is invalid
     private static boolean invalid(UserPostRequest req) {
-
         if (req.getId() == null) {
             return false;
         }
-
-        // check if the string fields are not blank, null, or whitespace
-        if (_invalid(req.getEmail()) || _invalid(req.getUsername()) || _invalid(req.getPassword())) {
-            return true;
-        } else { return false; }
+        return _invalid(req.getEmail()) || _invalid(req.getUsername()) || _invalid(req.getPassword());
     }
 
-    /** 
-     * Create a new user given a POST request containing user information.
-     *
-     * @param HttpExchange to send the response
-     * @param object containing fields of user to create
-    */
+    // ------------------------------------------------------------------
+    // CRUD
+    // ------------------------------------------------------------------
+
     public void createUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
-        // create a new user with hashed password 
-        // generate a UserPostResponse 
-        // return response
-
-
-        // all fields must be required.
         if (invalid(req)) {
-            // return 400 error empty data
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-        } else {
-            // check if the ids are dupe
-            for (User u : this.users) {
-                if (u.getId() == req.getId()) {
+        }
 
-                    // return 409 error
-                    HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
-                }
+        try {
+            // hash the password before storing
+            User newUser = new User(
+                req.getId(), req.getUsername(), req.getEmail(),
+                SecurityUtils.SHA256Hash(req.getPassword())
+            );
+
+            boolean inserted = db.insert(newUser);
+
+            if (!inserted) {
+                HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
             }
 
-            // create a new user
-            User newUser = new User(req.getId(), req.getUsername(), req.getEmail(), SecurityUtils.SHA256Hash(req.getPassword()));
+            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newUser));
 
-            // add to list
-            this.users.add(newUser);
-            // write to file
-            ScuffedDatabase.writeToFile(this.users, dbPath);
-
-            // turn user into json string
-            String data = gson.toJson(newUser);
-
-            // return 200 success and object
-            HttpUtils.sendHttpResponse(exchange, 200, data); return;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
         }
     }
 
-
-    /** 
-     * Update the information of a user.
-     *
-     * @param HttpExchange to send the response
-     * @param object containing the information of the requested user
-     */
     public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
-        // check if the id is null
         if (req.getId() == null) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        // chekc if req is invalid, return 400 if it is
-        // i'm doing this because i am checking if the fields are empty 
-        //
-        // but i also chekc for null, and reject null fields
-        // i can accept null fields
         try {
             if (req.getUsername().isBlank() || req.getEmail().isBlank() || req.getPassword().isBlank()) {
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } catch (Exception e) {
-
+            // fields were null — that's fine, null fields are just skipped in update
         }
 
-        for (User u : this.users) {
+        try {
+            // hash the password if it was provided
+            String hashedPassword = req.getPassword() != null
+                ? SecurityUtils.SHA256Hash(req.getPassword())
+                : null;
 
-            if (u.getId() == req.getId()) {
+            boolean updated = db.update(
+                req.getId(), req.getUsername(), req.getEmail(), hashedPassword
+            );
 
-                // update fields
-                if (req.getUsername() != null) {
-                    u.setUsername(req.getUsername());
-                }
-
-                if (req.getEmail() != null) {
-                    u.setEmail(req.getEmail());
-                }
-
-                if (req.getPassword() != null) {
-                    u.setPassword(SecurityUtils.SHA256Hash(req.getPassword()));
-                }
-
-                // success
-                ScuffedDatabase.writeToFile(this.users, dbPath);
-                String data = gson.toJson(u);
-                HttpUtils.sendHttpResponse(exchange, 200, data); return;
+            if (!updated) {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
             }
-        }
 
-        // req not in list
-        // return 400 {}
-        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+            // re-fetch the updated row to return it in the response
+            User updatedUser = db.getById(req.getId());
+            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedUser));
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
+        }
     }
 
-
-    /** 
-     * Delete a user form the database.
-     *
-     * @param httpexchange object for response 
-     * @param object containing information about the user to delete
-     */
     public void deleteUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
-        if (req.getId() == null || req.getEmail() == null || req.getUsername() == null || req.getPassword() == null ) {
-            // a value was null
+        if (req.getId() == null || req.getEmail() == null
+                || req.getUsername() == null || req.getPassword() == null) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
 
-        } else {
-            // not empty request, need to ensure user exists
-            for (User u : this.users) {
-                if (u.getId() == req.getId()) {
-                    // found match
-                    // need to validate values
-                    if (u.getEmail().equals(req.getEmail()) &&
-                        u.getUsername().equals(req.getUsername()) && u.getPassword().equals(SecurityUtils.SHA256Hash(req.getPassword()))) {
-                        // valid match
-                        // delete u from users, return success
-                        this.users.remove(u);
-                        ScuffedDatabase.writeToFile(this.users, dbPath);
-                        HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
+        try {
+            boolean deleted = db.delete(
+                req.getId(), req.getUsername(), req.getEmail(),
+                SecurityUtils.SHA256Hash(req.getPassword())
+            );
 
-                    } else {
-                        // user exists, but request supplied wrong password
-                        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
-
-                    }
-                }
+            if (deleted) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+            } else {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}");
             }
 
-            // user DNE, return 404
-            HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
         }
     }
 
-    /**
-     * Implementation of HttpHandler to route requests and perform business logic 
-     */
-    class UserHandler implements HttpHandler {
-
-        @Override
-        public void handle(HttpExchange exchange) throws IOException {
-
-            String method = exchange.getRequestMethod();
-            String path = exchange.getRequestURI().getPath();
-
-            if (path.equals("/user/wipe")) {
-                users.clear();
-                ScuffedDatabase.writeToFile(users, dbPath);
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                return;
-            }
-
-            if (path.equals("/user/shutdown")) {
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                new Thread(() -> {
-                    try {
-                        Thread.sleep(500);
-                        System.exit(0);
-                    } catch (Exception e) {}
-                }).start();
-                return;
-            }
-
-            switch (method) {
-                case "POST":
-
-                    InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
-
-                    try {
-                        UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
-
-                        switch (req.getCommand()) {
-
-                            case "create":
-
-                                createUser(exchange, req);
-                                break;
-
-                            case "update":
-
-                                updateUser(exchange, req);
-                                break;
-
-                            case "delete":
-
-                                deleteUser(exchange, req);
-                                break;
-
-                            default:
-
-                                // unknown post request, return some kind of error
-                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-                        }
-                    } catch (JsonSyntaxException e) {
-                        // malformed json body
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-
-                    } catch (JsonParseException e) {
-                        // if field type is not according to object type, return 400
-                        HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-
-                    }
-
-                    break;
-
-                case "GET":
-                    getUser(exchange, exchange.getRequestURI().getPath());
-                    break;
-
-                default:
-                    // unknown http request method
-                    HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-            }
-        }
-    }
-
-    /**
-     * Retrieve information about a user based on their id
-     *
-     * @param HttpExchange object to send back a response
-     * @param api enpoint path of which user to get
-     */
     public void getUser(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");
-        String query = exchange.getRequestURI().getQuery();
-
-        int id = -1;
+        String   query     = exchange.getRequestURI().getQuery();
+        int      id        = -1;
 
         if (query != null && query.startsWith("id=")) {
             try {
@@ -348,37 +195,108 @@ public class UserService extends MicroService{
                 HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
             }
         } else {
-
-            // neither format matched, return error.
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        for (User u: this.users) {
-            // if user found
-            if (u.getId() == id) {
-                String data = gson.toJson(u);
-                HttpUtils.sendHttpResponse(exchange, 200, data); return;
-            }
-        }
+        try {
+            User u = db.getById(id);
 
-        // user not found
-        HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
+            if (u != null) {
+                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(u));
+            } else {
+                HttpUtils.sendHttpResponse(exchange, 404, "{}");
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            HttpUtils.sendHttpResponse(exchange, 500, "{}");
+        }
     }
 
-    public static void main(String[] args) throws IOException{
+    // ------------------------------------------------------------------
+    // HTTP routing
+    // ------------------------------------------------------------------
 
-        // get the config file path from user
+    class UserHandler implements HttpHandler {
+
+        @Override
+        public void handle(HttpExchange exchange) throws IOException {
+
+            String method = exchange.getRequestMethod();
+            String path   = exchange.getRequestURI().getPath();
+
+            if (path.equals("/user/wipe")) {
+                try {
+                    db.wipe();
+                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                }
+                return;
+            }
+
+            if (path.equals("/user/shutdown")) {
+                HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                new Thread(() -> {
+                    try { Thread.sleep(500); System.exit(0); }
+                    catch (Exception e) {}
+                }).start();
+                return;
+            }
+
+            switch (method) {
+                case "POST":
+                    InputStreamReader reader =
+                        new InputStreamReader(exchange.getRequestBody(), "UTF-8");
+                    try {
+                        UserPostRequest req = gson.fromJson(reader, UserPostRequest.class);
+                        switch (req.getCommand()) {
+                            case "create": createUser(exchange, req); break;
+                            case "update": updateUser(exchange, req); break;
+                            case "delete": deleteUser(exchange, req); break;
+                            default:
+                                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+                        }
+                    } catch (JsonSyntaxException e) {
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                    } catch (JsonParseException e) {
+                        HttpUtils.sendHttpResponse(exchange, 400, "{}");
+                    }
+                    break;
+
+                case "GET":
+                    getUser(exchange, path);
+                    break;
+
+                default:
+                    HttpUtils.sendHttpResponse(exchange, 400, "{}");
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Entry point
+    // ------------------------------------------------------------------
+
+    public static void main(String[] args) throws IOException, SQLException {
+
         String configPath = args[0];
 
-        // read from json file
         Type type = new TypeToken<Map<String, ServerConfig>>() {}.getType();
-        Map <String, ServerConfig> servers = gson.fromJson(new FileReader(configPath), type);
+        Map<String, ServerConfig> servers =
+            gson.fromJson(new FileReader(configPath), type);
 
-        // get the config of the current server
-        ServerConfig config = servers.get(serverName);
+        ServerConfig config = servers.get(SERVER_NAME);
 
-        UserService u = new UserService(config.ip , config.port);
-        u.start();
-        //u.stop(5);
+        UserService service = new UserService(
+            config.ip,
+            config.port,
+            config.db.url,
+            config.db.user,
+            config.db.password
+        );
+
+        service.start();
     }
 }
