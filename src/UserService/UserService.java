@@ -377,7 +377,7 @@ public class UserService extends MicroService{
         // get the config of the current server
         ServerConfig config = servers.get(serverName);
 
-        UserService u = new UserService(config.ip, config.port);
+        UserService u = new UserService(config.ip , config.port);
         u.start();
         //u.stop(5);
     }

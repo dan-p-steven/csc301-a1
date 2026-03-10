@@ -211,6 +211,7 @@ public class OrderService extends MicroService {
     private void _handleOrder(HttpExchange exchange) throws IOException {
         
         try {
+	System.out.println("Recieved req");
         String errBody;
         OrderResponse ordResp;
         String method = exchange.getRequestMethod();

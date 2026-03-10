@@ -17,7 +17,7 @@ public class MicroService {
 
     // Constructor for the microserver. Needs an address and ip to construct.
     public MicroService(String ip, int port) throws IOException {
-        server = HttpServer.create(new InetSocketAddress(ip, port), 0);
+        server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
         server.setExecutor(null); // default executor
     }
 
