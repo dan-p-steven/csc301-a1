@@ -9,7 +9,7 @@ O_FLAG=false
 W_FLAG=false
 D_FLAG=false
 
-LIB="lib/gson-2.13.1.jar"
+LIB="lib/gson-2.13.1.jar:lib/postgresql-42.7.3.jar"
 CLASSES="compiled"
 CONFIG="config.json"
 
