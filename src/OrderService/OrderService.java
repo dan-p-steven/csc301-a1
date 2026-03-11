@@ -23,6 +23,7 @@ import java.net.http.HttpResponse;
 
 import OrderService.Order;
 import OrderService.OrderRequest;
+import OrderService.OrderDatabaseManager;
 import ProductService.Product;
 import ProductService.ProductPostRequest;
 import Shared.MicroService;
@@ -83,7 +84,6 @@ public class OrderService extends MicroService {
         public void handle(HttpExchange exchange) throws IOException {
 
             String path = exchange.getRequestURI().getPath();
-            HttpResponse<String> resp;
 
             if (path.equals("/shutdown")) {
                 try {
@@ -113,12 +113,21 @@ public class OrderService extends MicroService {
                 return;
             }
 
+            // Async Proxy Forwarding
             if (path.startsWith("/user") || path.startsWith("/product")) {
                 try {
-                    resp = HttpUtils.forwardRequest(exchange, iscsIp, iscsPort);
-                    HttpUtils.forwardResponse(exchange, resp);
-                } catch (InterruptedException e) {
-                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
+                    HttpUtils.forwardRequest(exchange, iscsIp, iscsPort)
+                        .thenAccept(resp -> {
+                            try {
+                                HttpUtils.forwardResponse(exchange, resp);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        })
+                        .exceptionally(ex -> {
+                            try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (Exception ignored) {}
+                            return null;
+                        });
                 } catch (IOException e) {
                     HttpUtils.sendHttpResponse(exchange, 500, "{}");
                 }
@@ -132,91 +141,85 @@ public class OrderService extends MicroService {
         }
     }
 
-    // ------------------------------------------------------------------
-    // Order handler
-    // ------------------------------------------------------------------
-
-    private void _handleOrder(HttpExchange exchange) throws IOException {
+    private void _handleOrder(HttpExchange exchange) 
+    throws IOException {
 
         try {
-            System.out.println("Received req");
-            String        errBody;
-            OrderResponse ordResp;
             String        method = exchange.getRequestMethod();
 
             if (!method.equals("POST")) {
-                ordResp  = new OrderResponse(null, null, null, null, "Invalid Request");
-                errBody  = gson.toJson(ordResp);
-                HttpUtils.sendHttpResponse(exchange, 400, errBody); return;
+                OrderResponse ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(ordResp)); return;
             }
 
             InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8");
             OrderRequest req = gson.fromJson(reader, OrderRequest.class);
 
-            if (!req.getCommand().equals("place order")) {
-                ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                errBody = gson.toJson(ordResp);
-                HttpUtils.sendHttpResponse(exchange, 400, errBody); return;
+            if (!req.getCommand().equals("place order") || req.getQuantity() <= 0) {
+                OrderResponse ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
+                HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(ordResp)); return;
             }
 
-            if (req.getQuantity() <= 0) {
-                ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                errBody = gson.toJson(ordResp);
-                HttpUtils.sendHttpResponse(exchange, 400, errBody); return;
-            }
+            // 1. Fetch user asynchronously
+            HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/" + req.getUserId())
+                .thenCompose(userResp -> {
+                    if (userResp.statusCode() != 200) {
+                        try {
+                            OrderResponse err = new OrderResponse(null, null, null, null, "Invalid Request");
+                            HttpUtils.sendHttpResponse(exchange, userResp.statusCode(), gson.toJson(err));
+                        } catch (IOException ignored) {}
+                        return java.util.concurrent.CompletableFuture.completedFuture(null);
+                    }
 
-            try {
-                // verify user exists
-                HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/" + req.getUserId());
-                if (userResp.statusCode() != 200) {
-                    ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                    errBody = gson.toJson(ordResp);
-                    HttpUtils.sendHttpResponse(exchange, userResp.statusCode(), errBody); return;
-                }
+                    // 2. Fetch product asynchronously
+                    return HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId())
+                        .thenAccept(prodResp -> {
+                            try {
+                                if (prodResp.statusCode() != 200) {
+                                    OrderResponse err = new OrderResponse(null, null, null, null, "Invalid Request");
+                                    HttpUtils.sendHttpResponse(exchange, prodResp.statusCode(), gson.toJson(err));
+                                    return;
+                                }
 
-                // verify product exists
-                HttpResponse<String> prodResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/product/" + req.getProductId());
-                if (prodResp.statusCode() != 200) {
-                    ordResp = new OrderResponse(null, null, null, null, "Invalid Request");
-                    errBody = gson.toJson(ordResp);
-                    HttpUtils.sendHttpResponse(exchange, prodResp.statusCode(), errBody); return;
-                }
+                                // 3. Check product quantity
+                                Product p = gson.fromJson(prodResp.body(), Product.class);
+                                if (p.getQuantity() <= req.getQuantity()) {
+                                    OrderResponse err = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
+                                    HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(err));
+                                    return;
+                                }
 
-                // check product quantity
-                Product p = gson.fromJson(prodResp.body(), Product.class);
-                if (p.getQuantity() <= req.getQuantity()) {
-                    ordResp = new OrderResponse(null, null, null, null, "Exceeded quantity limit");
-                    errBody = gson.toJson(ordResp);
-                    HttpUtils.sendHttpResponse(exchange, 400, errBody); return;
-                }
+                                // 4. Deduct quantity (Fire and forget async POST)
+                                ProductPostRequest prodUpdateReq = new ProductPostRequest(
+                                    "update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity()
+                                );
+                                HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", gson.toJson(prodUpdateReq));
 
-                // deduct quantity from product
-                ProductPostRequest prodUpdateReq = new ProductPostRequest(
-                    "update", p.getId(), null, null, null,
-                    p.getQuantity() - req.getQuantity()
-                );
-                HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product", gson.toJson(prodUpdateReq));
+                                // 5. Record purchase in DB
+                                db.recordPurchase(req.getUserId(), req.getProductId(), req.getQuantity());
 
-                // record purchase in DB — replaces the in-memory map + FileWriter
-                db.recordPurchase(req.getUserId(), req.getProductId(), req.getQuantity());
+                                // 6. Send final success response
+                                OrderResponse successResp = new OrderResponse(null, p.getId(), req.getUserId(), req.getQuantity(), "Success");
+                                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(successResp));
 
-                ordResp = new OrderResponse(null, p.getId(), req.getUserId(), req.getQuantity(), "Success");
-                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(ordResp));
-
-            } catch (InterruptedException e) {
-                System.out.println("error: InterruptedException");
-                HttpUtils.sendHttpResponse(exchange, 500, "{}");
-            } catch (SQLException e) {
-                e.printStackTrace();
-                HttpUtils.sendHttpResponse(exchange, 500, "{}");
-            }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                            }
+                        });
+                })
+                .exceptionally(ex -> {
+                    ex.printStackTrace();
+                    try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                    return null;
+                });
 
         } catch (JsonSyntaxException e) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}");
         }
     }
 
-    // ------------------------------------------------------------------
+     // ------------------------------------------------------------------
     // Purchase history handler
     // ------------------------------------------------------------------
 
@@ -225,10 +228,10 @@ public class OrderService extends MicroService {
      * Returns a map of productId -> totalQuantity for the given user.
      * e.g. { "4": 23, "5": 11, "2": 1 }
      */
-    private void _handleUserPurchased(HttpExchange exchange, String path) throws IOException {
 
+    private void _handleUserPurchased(HttpExchange exchange, String path) 
+    throws IOException {
         String[] parts = path.split("/");
-        // Expected: ["", "user", "purchased", "{id}"]
         if (parts.length != 4) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
@@ -240,26 +243,31 @@ public class OrderService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        // verify user exists
-        try {
-            HttpResponse<String> userResp = HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/" + userId);
-            if (userResp.statusCode() != 200) {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
-            }
-        } catch (InterruptedException e) {
-            HttpUtils.sendHttpResponse(exchange, 500, "{}"); return;
-        }
+        // Verify user exists asynchronously, then fetch purchases
+        HttpUtils.sendGetRequest(iscsIp, iscsPort, "/user/" + userId)
+            .thenAccept(userResp -> {
+                try {
+                    if (userResp.statusCode() != 200) {
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+                        return;
+                    }
 
-        // fetch purchases from DB — replaces userPurchases.getOrDefault()
-        try {
-            Map<Integer, Integer> purchases = db.getPurchasesByUser(userId);
-            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(purchases));
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+                    // Fetch purchases from DB
+                    Map<Integer, Integer> purchases = db.getPurchasesByUser(userId);
+                    HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(purchases));
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                }
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
-
+  
     // ------------------------------------------------------------------
     // Entry point
     // ------------------------------------------------------------------

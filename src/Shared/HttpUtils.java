@@ -18,6 +18,8 @@ import java.net.http.HttpResponse;
 import java.net.URI;
 import com.google.gson.Gson;
 
+import java.util.concurrent.CompletableFuture;
+
 public class HttpUtils {
 
     // One shared client for the lifetime of the application
@@ -72,7 +74,7 @@ public class HttpUtils {
         // Send response back to original caller
         exchange.sendResponseHeaders(statusCode, responseBytes.length);
         OutputStream os = exchange.getResponseBody();
-        os.write(responseBody.getBytes());
+        os.write(responseBytes);
         os.close();
 
     }
@@ -87,7 +89,8 @@ public class HttpUtils {
      * @return response from server
      *
      */
-    public static HttpResponse<String> forwardRequest(HttpExchange exchange, String destIp, int destPort) throws IOException, InterruptedException {
+    public static CompletableFuture<HttpResponse<String>> forwardRequest(HttpExchange exchange, String destIp, int destPort)
+    throws IOException, InterruptedException {
         // forward request to another machine
 
         Headers reqHeader = exchange.getRequestHeaders();
@@ -129,11 +132,7 @@ public class HttpUtils {
 
         // open client and send request
         HttpRequest forwardReq = builder.build();
-        HttpClient client = HttpClient.newHttpClient();
-        HttpResponse<String> resp = CLIENT.send(forwardReq, HttpResponse.BodyHandlers.ofString());
-
-        // return the response
-        return resp;
+        return CLIENT.sendAsync(forwardReq, HttpResponse.BodyHandlers.ofString());
     }
 
     /**
@@ -146,10 +145,8 @@ public class HttpUtils {
      *
      * @return response from the server
      */
-    public static HttpResponse<String> sendPostRequest(String ip, int port, String endpoint, String body) throws IOException, InterruptedException {
-
-        // create client
-        HttpClient client = HttpClient.newHttpClient();
+    public static CompletableFuture<HttpResponse<String>> sendPostRequest(String ip, int port, String endpoint, String body)
+    throws IOException, InterruptedException {
 
         // build request
         HttpRequest req = HttpRequest.newBuilder()
@@ -159,8 +156,7 @@ public class HttpUtils {
         .build();
 
         // return reponse
-        HttpResponse<String> resp = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
-        return resp;
+        return CLIENT.sendAsync(req, HttpResponse.BodyHandlers.ofString());
     }
 
     /**
@@ -173,10 +169,8 @@ public class HttpUtils {
      * @return response from the server
      */
 
-    public static HttpResponse<String> sendGetRequest(String ip, int port, String endpoint) throws IOException, InterruptedException {
-
-        // create client
-        HttpClient client = HttpClient.newHttpClient();
+    public static CompletableFuture<HttpResponse<String>> sendGetRequest(String ip, int port, String endpoint)
+    throws IOException, InterruptedException {
 
         // build request
         HttpRequest req = HttpRequest.newBuilder()
@@ -186,8 +180,6 @@ public class HttpUtils {
         .build();
 
         // return response
-        HttpResponse<String> resp = CLIENT.send(req, HttpResponse.BodyHandlers.ofString());
-
-        return resp;
+        return CLIENT.sendAsync(req, HttpResponse.BodyHandlers.ofString());
     }
 } 
