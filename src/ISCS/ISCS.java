@@ -61,63 +61,28 @@ public class ISCS extends MicroService
         }
 
         @Override
-        public void handle(HttpExchange exchange) throws IOException
+        public void handle(HttpExchange exchange)
+        throws IOException
         {
-            //build target URL
-            String path = exchange.getRequestURI().toString();
-            String targetUrlString = "http://" + targetConfig.ip + ":" + targetConfig.port + path;
+            try {
+                // 1. Fire the request asynchronously using our updated HttpUtils
+                HttpUtils.forwardRequest(exchange, targetConfig.ip, targetConfig.port)
+                    .thenAccept(resp -> {
+                        // 2. When the response arrives in the future, forward it back
+                        try {
+                            HttpUtils.forwardResponse(exchange, resp);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    })
+                    .exceptionally(ex -> {
+                        // 3. Catch any network or async errors gracefully
+                        try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (Exception ignored) {}
+                        return null;
+                    });
 
-
-            //open connection to target service
-            URL targetUrl = new URL(targetUrlString);
-            HttpURLConnection conn = (HttpURLConnection) targetUrl.openConnection();
-            conn.setRequestMethod(exchange.getRequestMethod());
-            conn.setDoOutput(true);
-
-            // forward headers
-           if (exchange.getRequestBody().available() > 0 || "POST".equalsIgnoreCase(exchange.getRequestMethod())) {
-                try (InputStream is = exchange.getRequestBody();
-                     OutputStream os = conn.getOutputStream()) {
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        os.write(buffer, 0, bytesRead);
-                    }
-                }
-            }
-
-            //get response code
-            int responseCode;
-            try
-            {
-                responseCode = conn.getResponseCode();
-            }
-            catch (IOException e)
-            {
-                responseCode = 503;
-            }
-
-            //read response
-            InputStream responseStream = (responseCode >= 400) ? conn.getErrorStream() : conn.getInputStream();
-            byte[] responseBytes = new byte[0];
-
-            if (responseStream != null) {
-                ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                byte[] data = new byte[1024];
-                int nRead;
-                while ((nRead = responseStream.read(data, 0, data.length)) != -1) {
-                    buffer.write(data, 0, nRead);
-                }
-                buffer.flush();
-                responseBytes = buffer.toByteArray();
-            }
-
-            //send response back to original client
-            exchange.getResponseHeaders().set("Content-Type", "application/json");
-            exchange.sendResponseHeaders(responseCode, responseBytes.length);
-            try (OutputStream os = exchange.getResponseBody()) 
-            {
-                os.write(responseBytes);
+            } catch (IOException e) {
+                HttpUtils.sendHttpResponse(exchange, 500, "{}");
             }
         }
     }
