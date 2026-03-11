@@ -21,7 +21,7 @@ public class MicroService {
     // Constructor for the microserver. Needs an address and ip to construct.
     public MicroService(String ip, int port) throws IOException {
         server = HttpServer.create(new InetSocketAddress("0.0.0.0", port), 0);
-        server.setExecutor(Executors.newFixedThreadPool(10));
+        server.setExecutor(Executors.newFixedThreadPool(256));
     }
 
     // Add a context for the micro server. We want this to be variable because

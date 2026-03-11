@@ -50,8 +50,7 @@ public class OrderService extends MicroService {
     private int    iscsPort;
 
     private int orderCount = 0;
-    private int DB_POOL = 10;
-    private int THREAD_POOL = 10;
+    private int DB_POOL = 20;
 
     // Replaces the in-memory userPurchases map + purchases.json file
     private final OrderDatabaseManager db;

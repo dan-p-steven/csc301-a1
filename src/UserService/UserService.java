@@ -64,7 +64,7 @@ public class UserService extends MicroService {
             throws IOException, SQLException, InterruptedException {
         super(ip, port);
         addContext(CONTEXT, new UserHandler());
-        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword, 10);
+        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword, 120);
     }
 
     // ------------------------------------------------------------------
