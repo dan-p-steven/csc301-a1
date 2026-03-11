@@ -72,7 +72,6 @@ public class OrderService extends MicroService {
     /** Variable to track the Order ID */
     private int orderCount = 0;
 
-    private boolean isFirstCommand = true;
 
     /** Constructor for the OrderService class.
      *
@@ -115,32 +114,6 @@ public class OrderService extends MicroService {
             String path = exchange.getRequestURI().getPath();
             HttpResponse<String> resp;
 
-            if (isFirstCommand)
-            {
-                isFirstCommand = false;
-                if (path.equals("/restart"))
-                {
-                    HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
-                }
-                else
-                {
-                    try
-                    {
-                        // wipe out purchase db
-                        userPurchases = new HashMap<>();
-                        FileWriter writer = new FileWriter(purchasesDbPath);
-                        gson.toJson(userPurchases, writer);
-    
-                        // wipe out user and product dbs
-                        HttpUtils.sendPostRequest(iscsIp, iscsPort, "/user/wipe", "{}");
-                        HttpUtils.sendPostRequest(iscsIp, iscsPort, "/product/wipe", "{}");
-                    }
-                    catch (Exception e)
-                    {
-                        System.out.println("failed to send wipe commands");
-                    }
-                }
-            }
 
             if (path.equals("/shutdown"))
             {
@@ -168,10 +141,6 @@ public class OrderService extends MicroService {
                     {}
                 }).start();
                 return;
-            }
-
-            if (path.equals("/restart")) {
-                HttpUtils.sendHttpResponse(exchange, 200, "{}"); return;
             }
 
             // Handle purchased history — must come BEFORE the generic /user forward
