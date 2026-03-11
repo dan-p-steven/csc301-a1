@@ -19,7 +19,12 @@
     }   ,
     "OrderService": {
         "port": 14133,
-        "ip": "127.0.0.1"
+        "ip": "127.0.0.1",
+        "db": {
+            "url": "jdbc:postgresql://localhost:14441/orders_db",
+            "user": "stevenda",
+            "password": "chezborgor"
+        }
     }   ,
     "InterServiceCommunication": {
         "port": 14000,
