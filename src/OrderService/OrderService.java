@@ -255,9 +255,18 @@ public class OrderService extends MicroService {
                         return;
                     }
 
-                    // Fetch purchases from DB
-                    Map<Integer, Integer> purchases = db.getPurchasesByUser(userId);
-                    HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(purchases));
+                    // FIX: Handle the CompletableFuture returned by the database!
+                    db.getPurchasesByUser(userId)
+                        .thenAccept(purchases -> {
+                            try {
+                                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(purchases));
+                            } catch (IOException ignored) {}
+                        })
+                        .exceptionally(dbEx -> {
+                            dbEx.printStackTrace();
+                            try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                            return null;
+                        });
 
                 } catch (Exception e) {
                     e.printStackTrace();

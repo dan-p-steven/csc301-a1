@@ -27,7 +27,8 @@ public class ConnectionPool {
      * Borrow a connection from the pool.
      * Blocks if all connections are in use until one is returned.
      */
-    public Connection getConnection() throws InterruptedException {
+    public Connection getConnection() 
+    throws InterruptedException, SQLException {
 
         Connection conn = pool.take();
 
