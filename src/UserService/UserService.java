@@ -85,70 +85,35 @@ public class UserService extends MicroService {
     // ------------------------------------------------------------------
     // CRUD
     // ------------------------------------------------------------------
-
     public void createUser(HttpExchange exchange, UserPostRequest req) throws IOException {
 
         if (invalid(req)) {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            // hash the password before storing
-            User newUser = new User(
-                req.getId(), req.getUsername(), req.getEmail(),
-                SecurityUtils.SHA256Hash(req.getPassword())
-            );
+        // Hash the password on the HTTP thread before passing it to the DB thread
+        User newUser = new User(
+            req.getId(), req.getUsername(), req.getEmail(),
+            SecurityUtils.SHA256Hash(req.getPassword())
+        );
 
-            boolean inserted = db.insert(newUser);
-
-            if (!inserted) {
-                HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
-            }
-
-            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newUser));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
-    }
-
-    public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
-
-        if (req.getId() == null) {
-            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-        }
-
-        try {
-            if (req.getUsername().isBlank() || req.getEmail().isBlank() || req.getPassword().isBlank()) {
-                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
-            }
-        } catch (Exception e) {
-            // fields were null — that's fine, null fields are just skipped in update
-        }
-
-        try {
-            // hash the password if it was provided
-            String hashedPassword = req.getPassword() != null
-                ? SecurityUtils.SHA256Hash(req.getPassword())
-                : null;
-
-            boolean updated = db.update(
-                req.getId(), req.getUsername(), req.getEmail(), hashedPassword
-            );
-
-            if (!updated) {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
-            }
-
-            // re-fetch the updated row to return it in the response
-            User updatedUser = db.getById(req.getId());
-            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedUser));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        // Call the async database method
+        db.insert(newUser)
+            .thenAccept(inserted -> {
+                try {
+                    if (!inserted) {
+                        HttpUtils.sendHttpResponse(exchange, 409, "{}");
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newUser));
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                // Catch any SQL or CompletionExceptions from the database thread
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
 
     public void deleteUser(HttpExchange exchange, UserPostRequest req) throws IOException {
@@ -176,12 +141,13 @@ public class UserService extends MicroService {
         }
     }
 
-    public void getUser(HttpExchange exchange, String path) throws IOException {
+public void getUser(HttpExchange exchange, String path) throws IOException {
 
         String[] splitPath = path.split("/");
         String   query     = exchange.getRequestURI().getQuery();
         int      id        = -1;
 
+        // URL parsing remains unchanged
         if (query != null && query.startsWith("id=")) {
             try {
                 id = Integer.parseInt(query.split("=")[1]);
@@ -198,21 +164,23 @@ public class UserService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            User u = db.getById(id);
-
-            if (u != null) {
-                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(u));
-            } else {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        // Call the async database method
+        db.getById(id)
+            .thenAccept(u -> {
+                try {
+                    if (u != null) {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(u));
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
-
     // ------------------------------------------------------------------
     // HTTP routing
     // ------------------------------------------------------------------
