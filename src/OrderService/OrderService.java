@@ -35,6 +35,7 @@ import java.io.FileReader;
 import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
 
+
 public class OrderService extends MicroService {
 
     private static String serverName = "OrderService";
@@ -49,6 +50,8 @@ public class OrderService extends MicroService {
     private int    iscsPort;
 
     private int orderCount = 0;
+    private int DB_POOL = 10;
+    private int THREAD_POOL = 10;
 
     // Replaces the in-memory userPurchases map + purchases.json file
     private final OrderDatabaseManager db;
@@ -71,7 +74,7 @@ public class OrderService extends MicroService {
 
         this.iscsIp  = iscsIp;
         this.iscsPort = iscsPort;
-        this.db = new OrderDatabaseManager(jdbcUrl, dbUser, dbPassword);
+        this.db = new OrderDatabaseManager(jdbcUrl, dbUser, dbPassword, DB_POOL);
     }
 
     // ------------------------------------------------------------------

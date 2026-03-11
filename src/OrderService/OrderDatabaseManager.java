@@ -1,30 +1,37 @@
-/*
- * Manages all database operations for the purchases table.
- *
- * Tracks how much of each product each user has purchased.
- * Schema: (user_id, product_id) is the composite primary key,
- * quantity is accumulated via INSERT ... ON CONFLICT ... DO UPDATE.
- *
- * @author Daniel Steven
- */
 package OrderService;
 
 import java.sql.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import Shared.ConnectionPool;
 
 public class OrderDatabaseManager {
 
     private final Connection conn;
+    private final ConnectionPool pool;
+    
+    // 1. Create a dedicated thread pool for database operations
+    private final ExecutorService dbExecutor;
 
     // ------------------------------------------------------------------
     // Construction
     // ------------------------------------------------------------------
 
-    public OrderDatabaseManager(String jdbcUrl, String user, String password)
-            throws SQLException {
+    public OrderDatabaseManager(String jdbcUrl, String user, String password, int poolSize)
+            throws SQLException, InterruptedException {
+
         this.conn = DriverManager.getConnection(jdbcUrl, user, password);
+        this.pool = new ConnectionPool(jdbcUrl, user, password, poolSize);
         this.conn.setAutoCommit(true);
+        
+        // Match the executor thread count to the connection pool size
+        this.dbExecutor = Executors.newFixedThreadPool(poolSize);
+        
         createTable();
     }
 
@@ -43,61 +50,83 @@ public class OrderDatabaseManager {
     }
 
     // ------------------------------------------------------------------
-    // RECORD PURCHASE
+    // RECORD PURCHASE (Async)
     // ------------------------------------------------------------------
 
-    /**
-     * Records a purchase, accumulating quantity if the user has bought
-     * this product before.
-     *
-     * Uses INSERT ... ON CONFLICT ... DO UPDATE so it works as both an
-     * insert (first purchase) and an update (repeat purchase) in one query.
-     */
-    public void recordPurchase(int userId, int productId, int quantity) throws SQLException {
-        String sql = """
-                INSERT INTO purchases (user_id, product_id, quantity)
-                VALUES (?, ?, ?)
-                ON CONFLICT (user_id, product_id)
-                DO UPDATE SET quantity = purchases.quantity + EXCLUDED.quantity
-                """;
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            ps.setInt(2, productId);
-            ps.setInt(3, quantity);
-            ps.executeUpdate();
-        }
-    }
-
-    // ------------------------------------------------------------------
-    // GET PURCHASES FOR USER
-    // ------------------------------------------------------------------
-
-    /**
-     * Returns all purchases for a given user as a map of productId -> totalQuantity.
-     * Returns an empty map if the user has no purchases.
-     */
-    public Map<Integer, Integer> getPurchasesByUser(int userId) throws SQLException {
-        String sql = "SELECT product_id, quantity FROM purchases WHERE user_id = ?";
-        Map<Integer, Integer> purchases = new HashMap<>();
-        try (PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    purchases.put(rs.getInt("product_id"), rs.getInt("quantity"));
+    public CompletableFuture<Void> recordPurchase(int userId, int productId, int quantity) {
+        // runAsync is used because we don't need to return any data (Void)
+        return CompletableFuture.runAsync(() -> {
+            String sql = """
+                    INSERT INTO purchases (user_id, product_id, quantity)
+                    VALUES (?, ?, ?)
+                    ON CONFLICT (user_id, product_id)
+                    DO UPDATE SET quantity = purchases.quantity + EXCLUDED.quantity
+                    """;
+                    
+            try {
+                Connection c = pool.getConnection();
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setInt(1, userId);
+                    ps.setInt(2, productId);
+                    ps.setInt(3, quantity);
+                    ps.executeUpdate();
+                } finally {
+                    pool.releaseConnection(c);
                 }
+            } catch (SQLException | InterruptedException e) {
+                // Java lambdas cannot throw checked exceptions, so we wrap them
+                throw new CompletionException(e);
             }
-        }
-        return purchases;
+        }, dbExecutor); // Pass the dedicated DB thread pool here!
     }
 
     // ------------------------------------------------------------------
-    // WIPE
+    // GET PURCHASES FOR USER (Async)
     // ------------------------------------------------------------------
 
-    public void wipe() throws SQLException {
-        try (Statement stmt = conn.createStatement()) {
-            stmt.execute("DELETE FROM purchases");
-        }
+    public CompletableFuture<Map<Integer, Integer>> getPurchasesByUser(int userId) {
+        // supplyAsync is used because we are returning data (the Map)
+        return CompletableFuture.supplyAsync(() -> {
+            String sql = "SELECT product_id, quantity FROM purchases WHERE user_id = ?";
+            Map<Integer, Integer> purchases = new HashMap<>();
+            
+            try {
+                // FIX: Switched to using the connection pool for thread safety
+                Connection c = pool.getConnection();
+                try (PreparedStatement ps = c.prepareStatement(sql)) {
+                    ps.setInt(1, userId);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        while (rs.next()) {
+                            purchases.put(rs.getInt("product_id"), rs.getInt("quantity"));
+                        }
+                    }
+                } finally {
+                    pool.releaseConnection(c);
+                }
+            } catch (SQLException | InterruptedException e) {
+                throw new CompletionException(e);
+            }
+            return purchases;
+        }, dbExecutor);
+    }
+
+    // ------------------------------------------------------------------
+    // WIPE (Async)
+    // ------------------------------------------------------------------
+
+    public CompletableFuture<Void> wipe() {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                Connection c = pool.getConnection();
+                try (Statement stmt = c.createStatement()) {
+                    stmt.execute("DELETE FROM purchases");
+                } finally {
+                    pool.releaseConnection(c);
+                }
+            } catch (SQLException | InterruptedException e) {
+                throw new CompletionException(e);
+            }
+        }, dbExecutor);
     }
 
     // ------------------------------------------------------------------
@@ -106,5 +135,6 @@ public class OrderDatabaseManager {
 
     public void close() throws SQLException {
         if (conn != null && !conn.isClosed()) conn.close();
+        dbExecutor.shutdown(); // Shut down the thread pool when closing
     }
 }
