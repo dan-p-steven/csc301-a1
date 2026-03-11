@@ -34,7 +34,8 @@ public class HttpUtils {
      * @param status code
      * @param string body of the response
      */
-    public static void sendHttpResponse(HttpExchange exchange, int status, String data) throws IOException{
+    public static void sendHttpResponse(HttpExchange exchange, int status, String data) 
+    throws IOException{
         // send a specific response back
 
         // set the headers to json (important)
@@ -59,7 +60,8 @@ public class HttpUtils {
      * @param httpexchange object
      * @param reponse to be forwarded
      */
-    public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) throws IOException {
+    public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) 
+    throws IOException {
         // forward a response without any doing anything to it
 
         // Extract response info
@@ -90,7 +92,7 @@ public class HttpUtils {
      *
      */
     public static CompletableFuture<HttpResponse<String>> forwardRequest(HttpExchange exchange, String destIp, int destPort)
-    throws IOException, InterruptedException {
+    throws IOException {
         // forward request to another machine
 
         Headers reqHeader = exchange.getRequestHeaders();
@@ -146,7 +148,7 @@ public class HttpUtils {
      * @return response from the server
      */
     public static CompletableFuture<HttpResponse<String>> sendPostRequest(String ip, int port, String endpoint, String body)
-    throws IOException, InterruptedException {
+    {
 
         // build request
         HttpRequest req = HttpRequest.newBuilder()
@@ -170,7 +172,7 @@ public class HttpUtils {
      */
 
     public static CompletableFuture<HttpResponse<String>> sendGetRequest(String ip, int port, String endpoint)
-    throws IOException, InterruptedException {
+    {
 
         // build request
         HttpRequest req = HttpRequest.newBuilder()

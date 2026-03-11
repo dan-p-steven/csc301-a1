@@ -62,7 +62,7 @@ public class OrderService extends MicroService {
 
     public OrderService(String ip, int port, String iscsIp, int iscsPort,
                         String jdbcUrl, String dbUser, String dbPassword)
-            throws IOException, SQLException {
+            throws IOException, SQLException, InterruptedException {
 
         super(ip, port);
         addContext("/user/purchased", new OrderHandler());
@@ -284,7 +284,7 @@ public class OrderService extends MicroService {
     // Entry point
     // ------------------------------------------------------------------
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws IOException, SQLException, InterruptedException {
 
         String configPath = args[0];
 
