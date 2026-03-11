@@ -61,10 +61,10 @@ public class UserService extends MicroService {
     // ------------------------------------------------------------------
 
     public UserService(String ip, int port, String jdbcUrl, String dbUser, String dbPassword)
-            throws IOException, SQLException {
+            throws IOException, SQLException, InterruptedException {
         super(ip, port);
         addContext(CONTEXT, new UserHandler());
-        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword);
+        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword, 10);
     }
 
     // ------------------------------------------------------------------
@@ -242,17 +242,6 @@ public void getUser(HttpExchange exchange, String path) throws IOException {
             String method = exchange.getRequestMethod();
             String path   = exchange.getRequestURI().getPath();
 
-            if (path.equals("/user/wipe")) {
-                try {
-                    db.wipe();
-                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
-                }
-                return;
-            }
-
             if (path.equals("/user/shutdown")) {
                 HttpUtils.sendHttpResponse(exchange, 200, "{}");
                 new Thread(() -> {
@@ -296,7 +285,8 @@ public void getUser(HttpExchange exchange, String path) throws IOException {
     // Entry point
     // ------------------------------------------------------------------
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) 
+    throws IOException, SQLException, InterruptedException {
 
         String configPath = args[0];
 
