@@ -123,23 +123,72 @@ public class UserService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            boolean deleted = db.delete(
-                req.getId(), req.getUsername(), req.getEmail(),
-                SecurityUtils.SHA256Hash(req.getPassword())
-            );
+        // Hash the password synchronously
+        String hashedPassword = SecurityUtils.SHA256Hash(req.getPassword());
 
-            if (deleted) {
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-            } else {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        db.delete(req.getId(), req.getUsername(), req.getEmail(), hashedPassword)
+            .thenAccept(deleted -> {
+                try {
+                    if (deleted) {
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
+
+    public void updateUser(HttpExchange exchange, UserPostRequest req) throws IOException {
+
+        if (req.getId() == null) {
+            HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+        }
+
+        try {
+            if (req.getUsername().isBlank() || req.getEmail().isBlank() || req.getPassword().isBlank()) {
+                HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
+            }
+        } catch (Exception e) {
+            // fields were null — that's fine, null fields are just skipped in update
+        }
+
+        // Hash the password synchronously before starting the DB chain
+        String hashedPassword = req.getPassword() != null
+            ? SecurityUtils.SHA256Hash(req.getPassword())
+            : null;
+
+        // 1. Fire the async update
+        db.update(req.getId(), req.getUsername(), req.getEmail(), hashedPassword)
+            .thenCompose(updated -> {
+                if (!updated) {
+                    try { HttpUtils.sendHttpResponse(exchange, 404, "{}"); } catch (IOException ignored) {}
+                    // Stop the chain by returning a completed future containing null
+                    return java.util.concurrent.CompletableFuture.completedFuture(null);
+                }
+                
+                // 2. If update succeeded, chain the async fetch
+                return db.getById(req.getId());
+            })
+            .thenAccept(updatedUser -> {
+                // 3. Handle the final fetched user
+                if (updatedUser != null) {
+                    try {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedUser));
+                    } catch (IOException ignored) {}
+                }
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
+    }
+
 
 public void getUser(HttpExchange exchange, String path) throws IOException {
 
