@@ -8,6 +8,8 @@ import statistics
 from dataclasses import dataclass, field
 from typing import Optional
 
+import itertools
+
 OBJ_MAPPING = {"USER": User, "PRODUCT": Product, "ORDER": None}
 CMD_MAPPING = {"CREATE": "create", "DELETE": "delete", "UPDATE": "update"}
 
@@ -40,17 +42,28 @@ def generate_payload(line):
 
 
 # ---------------------------------------------------------------------------
-# Workload streaming (unchanged from original)
+# Workload streaming 
 # ---------------------------------------------------------------------------
 
-def stream_workload(workload_file: str):
+def stream_workload(workload_file: str, total_requests: int):
+    # 1. Read the small file into a list in memory (filtering for USER)
+    base_requests = []
     with open(workload_file, 'r') as file:
         for line in file:
             parts = shlex.split(line.strip())
-            if parts:
-                yield parts
+            if parts and parts[0] == "USER":
+                base_requests.append(parts)
+    
+    if not base_requests:
+        print("Error: No valid USER requests found in the workload file.")
+        return
 
+    # 2. Create an endless loop of those base requests
+    endless_cycle = itertools.cycle(base_requests)
 
+    # 3. Yield exactly the number of requests you want to test
+    for _ in range(total_requests):
+        yield next(endless_cycle)
 # ---------------------------------------------------------------------------
 # Result tracking
 # ---------------------------------------------------------------------------
@@ -156,9 +169,9 @@ def print_metrics(results: list[RequestResult], total_wall_time: float):
 # ---------------------------------------------------------------------------
 
 async def run_load_test(args):
-    lines = list(stream_workload(args.workload_file))
+    lines = list(stream_workload(args.workload_file, args.num_requests))
     total = len(lines)
-    print(f"Loaded {total} requests from {args.workload_file}")
+    print(f"Generated {total} requests from {args.workload_file}")
     print(f"Concurrency cap  : {args.concurrency}")
     print(f"Target           : {args.url}")
     print(f"Firing...\n")
@@ -196,6 +209,8 @@ def main():
                         help='Max concurrent requests in flight (default: 50)')
     parser.add_argument('--timeout', type=float, default=10.0,
                         help='Per-request timeout in seconds (default: 10)')
+    parser.add_argument('-n', dest='num_requests', type=int, default=10000,
+                        help='Total number of requests to generate by cycling the file (default: 10000)')
     args = parser.parse_args()
 
     asyncio.run(run_load_test(args))
