@@ -14,7 +14,7 @@ CLASSES="compiled"
 CONFIG="config.json"
 
 # Parse flags
-while getopts "cupdiow:" opt; do
+while getopts "cupdow:" opt; do
   case $opt in
     c)
       C_FLAG=true
@@ -27,9 +27,6 @@ while getopts "cupdiow:" opt; do
       ;;
     d)
       D_FLAG=true
-      ;;
-    i)
-      I_FLAG=true
       ;;
     o)
       O_FLAG=true
@@ -55,7 +52,6 @@ if $C_FLAG; then
   src/Shared/*.java \
   src/UserService/*.java \
   src/ProductService/*.java \
-  src/ISCS/*.java \
   src/OrderService/*.java
   echo "SUCCESS"
 fi
@@ -72,11 +68,6 @@ fi
 
 if $D_FLAG; then
 javadoc -cp $LIB -Xdoclint:none -d docs src/**/*.java
-fi
-
-if $I_FLAG; then
-  echo "[ISCS]"
-  java -cp $CLASSES:$LIB ISCS.ISCS $CONFIG
 fi
 
 if $O_FLAG; then

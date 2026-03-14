@@ -1,7 +1,8 @@
 package Shared;
+import java.util.List;
 
 public class ServerConfig {
-    public String ip;
+    public List<String> ips;
     public int port;
     public DbConfig db;
 
@@ -12,4 +13,3 @@ public class ServerConfig {
     }
 
 }
-

@@ -25,9 +25,5 @@
             "user": "stevenda",
             "password": "chezborgor"
         }
-    }   ,
-    "InterServiceCommunication": {
-        "port": 14000,
-        "ip": "127.0.0.1"
     }
 }
