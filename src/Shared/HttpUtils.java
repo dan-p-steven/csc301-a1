@@ -1,187 +1,90 @@
-/**
- * Class containing shared http tools used by microservices
- *
- * @author Daniel Steven
- */
 package Shared;
 
 import java.io.IOException;
 import java.io.OutputStream;
-
-import com.sun.net.httpserver.Headers;
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-
+import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.URI;
-import com.google.gson.Gson;
-
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import com.sun.net.httpserver.Headers;
+import com.sun.net.httpserver.HttpExchange;
 
 public class HttpUtils {
 
-    // One shared client for the lifetime of the application
+    // 1. Dedicated thread pool for high-concurrency async I/O
+    // Using a fixed pool sized to handle hundreds of concurrent network flights
+    private static final ExecutorService HTTP_EXECUTOR = Executors.newFixedThreadPool(200);
+
+    // 2. Shared high-performance client
     private static final HttpClient CLIENT = HttpClient.newBuilder()
         .version(HttpClient.Version.HTTP_1_1)
+        .executor(HTTP_EXECUTOR) // Use our custom pool
+        .connectTimeout(Duration.ofMillis(500)) // Don't wait forever for a dead node
         .build();
 
-    /**
-     * send back a http response with specific parameters
-     *
-     * @param httpexchange object for response
-     * @param status code
-     * @param string body of the response
-     */
-    public static void sendHttpResponse(HttpExchange exchange, int status, String data) 
-    throws IOException{
-        // send a specific response back
-
-        // set the headers to json (important)
+    public static void sendHttpResponse(HttpExchange exchange, int status, String data) throws IOException {
         exchange.getResponseHeaders().set("Content-Type", "application/json");
-
-        // get bytes of data
         byte[] dataBytes = data.getBytes("UTF-8");
-
-        // send response headers (status and length of bytes in response body)
         exchange.sendResponseHeaders(status, dataBytes.length);
-
-        // send response body
-        OutputStream responseBodyStream = exchange.getResponseBody();
-        responseBodyStream.write(dataBytes);
-        responseBodyStream.close();
-
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(dataBytes);
+        }
     }
 
-    /**
-     * forward a response back to a client
-     *
-     * @param httpexchange object
-     * @param reponse to be forwarded
-     */
-    public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) 
-    throws IOException {
-        // forward a response without any doing anything to it
-
-        // Extract response info
+    public static void forwardResponse(HttpExchange exchange, HttpResponse<String> response) throws IOException {
         int statusCode = response.statusCode();
         String responseBody = response.body();
-
-        // Copy Content-Type header if present
         String contentType = response.headers().firstValue("Content-Type").orElse("application/json");
+        
         exchange.getResponseHeaders().set("Content-Type", contentType);
-
         byte[] responseBytes = responseBody.getBytes("UTF-8");
-        // Send response back to original caller
         exchange.sendResponseHeaders(statusCode, responseBytes.length);
-        OutputStream os = exchange.getResponseBody();
-        os.write(responseBytes);
-        os.close();
-
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(responseBytes);
+        }
     }
 
-    /**
-     * forward a request to another server
-     *
-     * @param httpexchange object
-     * @param destination ip address
-     * @pram destination port
-     *
-     * @return response from server
-     *
-     */
-    public static CompletableFuture<HttpResponse<String>> forwardRequest(HttpExchange exchange, String destIp, int destPort)
-    throws IOException {
-        // forward request to another machine
-
-        Headers reqHeader = exchange.getRequestHeaders();
-        String reqUri = exchange.getRequestURI().toString();
-        String reqMethod = exchange.getRequestMethod();
-
-        String destUrl =  "http://" + destIp + ":" + destPort + reqUri;
-        String reqBody;
-
-        // Start building the forward request
+    public static CompletableFuture<HttpResponse<String>> forwardRequest(HttpExchange exchange, String destIp, int destPort) throws IOException {
+        String destUrl = "http://" + destIp + ":" + destPort + exchange.getRequestURI().toString();
         HttpRequest.Builder builder = HttpRequest.newBuilder()
-        .uri(URI.create(destUrl));
+            .uri(URI.create(destUrl))
+            .timeout(Duration.ofMillis(1000)); // Total request timeout
 
-        // set the appropriate method
-        if (reqMethod.equals("POST")) {
-
-            // populate body and set method to POST
-           reqBody = new String(exchange.getRequestBody().readAllBytes());
-           builder.POST(HttpRequest.BodyPublishers.ofString(reqBody));
-
-        } else if (reqMethod.equals("PUT")) {
-
-            // populate body and set method to PUT
-           reqBody = new String(exchange.getRequestBody().readAllBytes());
-           builder.PUT(HttpRequest.BodyPublishers.ofString(reqBody));
-
-        } else if (reqMethod.equals("DELETE")) {
-            builder.DELETE();
-        } else if (reqMethod.equals("GET")) {
-            builder.GET();
+        String method = exchange.getRequestMethod();
+        if (method.equals("POST") || method.equals("PUT")) {
+            byte[] body = exchange.getRequestBody().readAllBytes();
+            builder.method(method, HttpRequest.BodyPublishers.ofByteArray(body));
+        } else {
+            builder.method(method, HttpRequest.BodyPublishers.noBody());
         }
 
-         // Copy headers
-        String contentType = reqHeader.getFirst("Content-Type");
-        if (contentType != null) {
-            builder.header("Content-Type", contentType);
-        }
+        String contentType = exchange.getRequestHeaders().getFirst("Content-Type");
+        if (contentType != null) builder.header("Content-Type", contentType);
 
-
-        // open client and send request
-        HttpRequest forwardReq = builder.build();
-        return CLIENT.sendAsync(forwardReq, HttpResponse.BodyHandlers.ofString());
+        return CLIENT.sendAsync(builder.build(), HttpResponse.BodyHandlers.ofString());
     }
 
-    /**
-     * send a POST request to a server 
-     *
-     * @param ip of the server
-     * @param port of the server
-     * @param endpoint you want to connect to 
-     * @param body of the message
-     *
-     * @return response from the server
-     */
-    public static CompletableFuture<HttpResponse<String>> sendPostRequest(String ip, int port, String endpoint, String body)
-    {
-
-        // build request
+    public static CompletableFuture<HttpResponse<String>> sendPostRequest(String ip, int port, String endpoint, String body) {
         HttpRequest req = HttpRequest.newBuilder()
-        .uri(URI.create("http://" + ip + ":" + port + endpoint))
-        .header("Content-Type", "application/json")
-        .POST(HttpRequest.BodyPublishers.ofString(body))
-        .build();
-
-        // return reponse
+            .uri(URI.create("http://" + ip + ":" + port + endpoint))
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofMillis(1000))
+            .POST(HttpRequest.BodyPublishers.ofString(body))
+            .build();
         return CLIENT.sendAsync(req, HttpResponse.BodyHandlers.ofString());
     }
 
-    /**
-     * send a GET request to a server 
-     *
-     * @param ip of the server
-     * @param port of the server
-     * @param endpoint you want to connect to 
-     *
-     * @return response from the server
-     */
-
-    public static CompletableFuture<HttpResponse<String>> sendGetRequest(String ip, int port, String endpoint)
-    {
-
-        // build request
+    public static CompletableFuture<HttpResponse<String>> sendGetRequest(String ip, int port, String endpoint) {
         HttpRequest req = HttpRequest.newBuilder()
-        .uri(URI.create("http://" + ip + ":" + port + endpoint))
-        .header("Content-Type", "application/json")
-        .GET()
-        .build();
-
-        // return response
+            .uri(URI.create("http://" + ip + ":" + port + endpoint))
+            .header("Content-Type", "application/json")
+            .timeout(Duration.ofMillis(1000))
+            .GET()
+            .build();
         return CLIENT.sendAsync(req, HttpResponse.BodyHandlers.ofString());
     }
-} 
+}
