@@ -1,2 +1,4 @@
 project_outline/
 compiled/
+tests/load_tester/product_workloads/
+tests/load_tester/workloads/

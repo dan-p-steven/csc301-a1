@@ -51,7 +51,7 @@ def stream_workload(workload_file: str, total_requests: int):
     with open(workload_file, 'r') as file:
         for line in file:
             parts = shlex.split(line.strip())
-            if parts and parts[0] == "USER":
+            if parts and parts[0] in OBJ_MAPPING:
                 base_requests.append(parts)
     
     if not base_requests:

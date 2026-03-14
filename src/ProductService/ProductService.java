@@ -1,8 +1,3 @@
-/*
- * A class representing the core business and routing logic of the ProductService.
- *
- * @author Daniel Steven
- */
 package ProductService;
 
 import com.google.gson.Gson;
@@ -32,16 +27,17 @@ public class ProductService extends MicroService {
     private static final Gson gson = new Gson();
 
     private final ProductDatabaseManager db;
+    private int DB_POOL = 50; // Added the connection pool baseline
 
     // ------------------------------------------------------------------
     // Constructor
     // ------------------------------------------------------------------
 
     public ProductService(String ip, int port, String jdbcUrl, String dbUser, String dbPassword)
-            throws IOException, SQLException {
+            throws IOException, SQLException, InterruptedException {
         super(ip, port);
         addContext(CONTEXT, new ProductHandler());
-        this.db = new ProductDatabaseManager(jdbcUrl, dbUser, dbPassword);
+        this.db = new ProductDatabaseManager(jdbcUrl, dbUser, dbPassword, DB_POOL);
     }
 
     // ------------------------------------------------------------------
@@ -71,24 +67,26 @@ public class ProductService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            Product newProduct = new Product(
-                req.getId(), req.getName(), req.getDescription(),
-                req.getPrice(), req.getQuantity()
-            );
+        Product newProduct = new Product(
+            req.getId(), req.getName(), req.getDescription(),
+            req.getPrice(), req.getQuantity()
+        );
 
-            boolean inserted = db.insert(newProduct);
-
-            if (!inserted) {
-                HttpUtils.sendHttpResponse(exchange, 409, "{}"); return;
-            }
-
-            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newProduct));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        db.insert(newProduct)
+            .thenAccept(inserted -> {
+                try {
+                    if (!inserted) {
+                        HttpUtils.sendHttpResponse(exchange, 409, "{}");
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(newProduct));
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
 
     public void updateProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
@@ -107,24 +105,26 @@ public class ProductService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            boolean updated = db.update(
-                req.getId(), req.getName(), req.getDescription(),
-                req.getPrice(), req.getQuantity()
-            );
-
-            if (!updated) {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}"); return;
-            }
-
-            // re-fetch the updated row to return it in the response
-            Product updatedProduct = db.getById(req.getId());
-            HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedProduct));
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        db.update(req.getId(), req.getName(), req.getDescription(), req.getPrice(), req.getQuantity())
+            .thenCompose(updated -> {
+                if (!updated) {
+                    try { HttpUtils.sendHttpResponse(exchange, 404, "{}"); } catch (IOException ignored) {}
+                    return java.util.concurrent.CompletableFuture.completedFuture((Product) null);
+                }
+                return db.getById(req.getId());
+            })
+            .thenAccept(updatedProduct -> {
+                if (updatedProduct != null) {
+                    try {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(updatedProduct));
+                    } catch (IOException ignored) {}
+                }
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
 
     public void deleteProduct(HttpExchange exchange, ProductPostRequest req) throws IOException {
@@ -134,21 +134,21 @@ public class ProductService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            boolean deleted = db.delete(
-                req.getId(), req.getName(), req.getPrice(), req.getQuantity()
-            );
-
-            if (deleted) {
-                HttpUtils.sendHttpResponse(exchange, 200, "{}");
-            } else {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        db.delete(req.getId(), req.getName(), req.getPrice(), req.getQuantity())
+            .thenAccept(deleted -> {
+                try {
+                    if (deleted) {
+                        HttpUtils.sendHttpResponse(exchange, 200, "{}");
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
 
     public void getProduct(HttpExchange exchange, String path) throws IOException {
@@ -173,19 +173,21 @@ public class ProductService extends MicroService {
             HttpUtils.sendHttpResponse(exchange, 400, "{}"); return;
         }
 
-        try {
-            Product p = db.getById(id);
-
-            if (p != null) {
-                HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(p));
-            } else {
-                HttpUtils.sendHttpResponse(exchange, 404, "{}");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            HttpUtils.sendHttpResponse(exchange, 500, "{}");
-        }
+        db.getById(id)
+            .thenAccept(p -> {
+                try {
+                    if (p != null) {
+                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(p));
+                    } else {
+                        HttpUtils.sendHttpResponse(exchange, 404, "{}");
+                    }
+                } catch (IOException ignored) {}
+            })
+            .exceptionally(ex -> {
+                ex.printStackTrace();
+                try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                return null;
+            });
     }
 
     // ------------------------------------------------------------------
@@ -200,14 +202,17 @@ public class ProductService extends MicroService {
             String method = exchange.getRequestMethod();
             String path   = exchange.getRequestURI().getPath();
 
+            // Made /wipe fully async as well
             if (path.equals("/product/wipe")) {
-                try {
-                    db.wipe();
-                    HttpUtils.sendHttpResponse(exchange, 200, "{}");
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                    HttpUtils.sendHttpResponse(exchange, 500, "{}");
-                }
+                db.wipe()
+                    .thenAccept(v -> {
+                        try { HttpUtils.sendHttpResponse(exchange, 200, "{}"); } catch (IOException ignored) {}
+                    })
+                    .exceptionally(ex -> {
+                        ex.printStackTrace();
+                        try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                        return null;
+                    });
                 return;
             }
 
@@ -252,7 +257,7 @@ public class ProductService extends MicroService {
     // Entry point
     // ------------------------------------------------------------------
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) throws IOException, SQLException, InterruptedException {
 
         String configPath = args[0];
 

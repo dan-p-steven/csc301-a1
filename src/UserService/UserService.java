@@ -31,6 +31,7 @@ import java.lang.reflect.Type;
 import java.util.Map;
 import com.google.gson.reflect.TypeToken;
 
+
 public class UserService extends MicroService {
 
     private static final String SERVER_NAME = "UserService";
@@ -55,6 +56,7 @@ public class UserService extends MicroService {
         .create();
 
     private final UserDatabaseManager db;
+    private int DB_POOL = 50;
 
     // ------------------------------------------------------------------
     // Constructor
@@ -64,7 +66,7 @@ public class UserService extends MicroService {
             throws IOException, SQLException, InterruptedException {
         super(ip, port);
         addContext(CONTEXT, new UserHandler());
-        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword, 120);
+        this.db = new UserDatabaseManager(jdbcUrl, dbUser, dbPassword, DB_POOL);
     }
 
     // ------------------------------------------------------------------

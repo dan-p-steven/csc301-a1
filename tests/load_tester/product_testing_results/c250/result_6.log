@@ -1,0 +1,30 @@
+Generated 100000 requests from product_workloads/workload_part_06
+Concurrency cap  : 250
+Target           : http://142.1.46.95:14133
+Firing...
+
+
+=======================================================
+               LOAD TEST RESULTS
+=======================================================
+  Total requests   : 100000
+  Successful       : 97377  (97.4%)
+  Failed           : 2623  (2.6%)
+  Wall time        : 165.54s
+  Throughput       : 604.1 req/s
+-------------------------------------------------------
+  Latency (ms)
+    min            : 0.2
+    mean           : 410.1
+    median (p50)   : 403.6
+    p90            : 502.8
+    p95            : 557.2
+    p99            : 681.0
+    max            : 2380.4
+-------------------------------------------------------
+  Status codes
+    200                  : 97377
+    500                  : 72
+    ERROR: Server disconnected : 483
+    ERROR: [Errno None] Can not write request body  : 2068
+=======================================================
