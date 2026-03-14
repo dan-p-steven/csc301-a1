@@ -268,7 +268,7 @@ public class ProductService extends MicroService {
         ServerConfig config = servers.get(SERVER_NAME);
 
         ProductService service = new ProductService(
-            config.ip,
+            "0.0.0.0",
             config.port,
             config.db.url,
             config.db.user,

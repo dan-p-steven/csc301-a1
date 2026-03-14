@@ -299,7 +299,7 @@ public void getUser(HttpExchange exchange, String path) throws IOException {
         ServerConfig config = servers.get(SERVER_NAME);
 
         UserService service = new UserService(
-            config.ip,
+            "0.0.0.0",
             config.port,
             config.db.url,
             config.db.user,
