@@ -2,7 +2,7 @@
 NUM_TESTERS=10
 
 N=100000
-IP=142.1.46.95
+IP="dh2010pc03.utm.utoronto.ca"
 
 #C=250
 #OUT_DIR="product_testing_results/c250"
@@ -21,7 +21,7 @@ WORK_DIR="product_workloads"
 ##wipe 
 #curl http://$IP:14133/product/wipe
 
-C=400
+C=1000
 OUT_DIR="product_testing_results/c400"
 
 echo "Initiating Testing Swarm..."

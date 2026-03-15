@@ -1,6 +1,6 @@
 Generated 100000 requests from product_workloads/workload_part_00
-Concurrency cap  : 400
-Target           : http://142.1.46.95:14133
+Concurrency cap  : 1000
+Target           : http://dh2010pc03.utm.utoronto.ca:14133
 Firing...
 
 
@@ -8,23 +8,20 @@ Firing...
                LOAD TEST RESULTS
 =======================================================
   Total requests   : 100000
-  Successful       : 97049  (97.0%)
-  Failed           : 2951  (3.0%)
-  Wall time        : 171.38s
-  Throughput       : 583.5 req/s
+  Successful       : 0  (0.0%)
+  Failed           : 100000  (100.0%)
+  Wall time        : 30.55s
+  Throughput       : 3273.8 req/s
 -------------------------------------------------------
   Latency (ms)
-    min            : 0.2
-    mean           : 677.6
-    median (p50)   : 670.7
-    p90            : 852.2
-    p95            : 919.1
-    p99            : 1117.8
-    max            : 2901.3
+    min            : 8.4
+    mean           : 149.6
+    median (p50)   : 73.5
+    p90            : 428.1
+    p95            : 474.4
+    p99            : 1035.8
+    max            : 1325.1
 -------------------------------------------------------
   Status codes
-    200                  : 97049
-    500                  : 56
-    ERROR: Server disconnected : 572
-    ERROR: [Errno None] Can not write request body  : 2323
+    ERROR: Cannot connect to host dh2010pc03.utm.ut : 100000
 =======================================================
