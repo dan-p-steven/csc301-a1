@@ -1,0 +1,5 @@
+Generated 100000 requests from workloads/product/get/workload_chunk_08
+Concurrency cap  : 1000
+Target           : http://dh2010pc03.utm.utoronto.ca:14133
+Firing...
+

@@ -244,6 +244,21 @@ public void getUser(HttpExchange exchange, String path) throws IOException {
             String method = exchange.getRequestMethod();
             String path   = exchange.getRequestURI().getPath();
 
+
+            // Made /wipe fully async as well
+            if (path.equals("/user/wipe")) {
+                db.wipe()
+                    .thenAccept(v -> {
+                        try { HttpUtils.sendHttpResponse(exchange, 200, "{}"); } catch (IOException ignored) {}
+                    })
+                    .exceptionally(ex -> {
+                        ex.printStackTrace();
+                        try { HttpUtils.sendHttpResponse(exchange, 500, "{}"); } catch (IOException ignored) {}
+                        return null;
+                    });
+                return;
+            }
+
             if (path.equals("/user/shutdown")) {
                 HttpUtils.sendHttpResponse(exchange, 200, "{}");
                 new Thread(() -> {

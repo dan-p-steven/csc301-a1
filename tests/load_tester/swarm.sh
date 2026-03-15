@@ -3,10 +3,11 @@
 N=100000
 IP="dh2010pc03.utm.utoronto.ca"
 
-WORK_DIR="workloads/product/create/"
-C=250
-SERVICE="product"
 CMD="create"
+SERVICE="user"
+C=100
+
+WORK_DIR="workloads/${SERVICE}/${CMD}"
 NUM_TESTERS=10
 ARCH="hScale50"
 
@@ -14,10 +15,13 @@ OUT_DIR="results/${SERVICE}/${CMD}_${NUM_TESTERS}T_${C}C_${ARCH}"
 
 
 echo "Initiating Testing Swarm"
-echo "\t${SERVICE}_${CMD}_${NUM_TESTERS}T_${C}C_${ARCH}"
+echo -e "\t${SERVICE}_${CMD}_${NUM_TESTERS}T_${C}C_${ARCH}"
+
+#wipe 
+curl http://$IP:14133/${SERVICE}/wipe
 
 END_INDEX=$((NUM_TESTERS - 1))
-mkdir -p $OUTDIR
+mkdir -p $OUT_DIR
 
 for i in $(seq -f "%02g" 0 $END_INDEX)
 do
@@ -27,7 +31,5 @@ done
 
 wait
 
-#wipe 
-curl http://$IP:14133/${SERVICE}/wipe
 
 echo "Dust has settled. Check results at: ${OUT_DIR}"

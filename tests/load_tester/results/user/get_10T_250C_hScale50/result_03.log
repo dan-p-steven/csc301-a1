@@ -1,0 +1,29 @@
+Generated 100000 requests from workloads/user/get/workload_chunk_03
+Concurrency cap  : 250
+Target           : http://dh2010pc03.utm.utoronto.ca:14133
+Firing...
+
+
+=======================================================
+               LOAD TEST RESULTS
+=======================================================
+  Total requests   : 100000
+  Successful       : 96964  (97.0%)
+  Failed           : 3036  (3.0%)
+  Wall time        : 43.73s
+  Throughput       : 2287.0 req/s
+-------------------------------------------------------
+  Latency (ms)
+    min            : 0.4
+    mean           : 103.4
+    median (p50)   : 98.8
+    p90            : 117.7
+    p95            : 130.1
+    p99            : 320.7
+    max            : 2168.7
+-------------------------------------------------------
+  Status codes
+    200                  : 96964
+    404                  : 3031
+    ERROR: Server disconnected : 5
+=======================================================

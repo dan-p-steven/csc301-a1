@@ -48,7 +48,7 @@ if $C_FLAG; then
   mkdir -p data/
 
   echo "Compiling Java files..."
-  javac -cp .:$LIB -d $CLASSES \
+  /opt/jdk-22.0.1/bin/javac -cp .:$LIB -d $CLASSES \
   src/Shared/*.java \
   src/UserService/*.java \
   src/ProductService/*.java \
@@ -58,12 +58,12 @@ fi
 
 if $U_FLAG; then
   echo "[UserService]"
-  java -cp $CLASSES:$LIB UserService.UserService $CONFIG
+  /opt/jdk-22.0.1/bin/java -cp $CLASSES:$LIB UserService.UserService $CONFIG
 fi
 
 if $P_FLAG; then
   echo "[ProductService]"
-  java -cp $CLASSES:$LIB ProductService.ProductService $CONFIG
+  /opt/jdk-22.0.1/bin/java -cp $CLASSES:$LIB ProductService.ProductService $CONFIG
 fi
 
 if $D_FLAG; then
@@ -72,7 +72,7 @@ fi
 
 if $O_FLAG; then
     echo "[OrderService]"
-    java -cp $CLASSES:$LIB OrderService.OrderService $CONFIG
+    /opt/jdk-22.0.1/bin/java -cp $CLASSES:$LIB OrderService.OrderService $CONFIG
 fi
 
 if $W_FLAG; then

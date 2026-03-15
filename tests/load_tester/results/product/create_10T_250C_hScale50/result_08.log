@@ -1,0 +1,28 @@
+Generated 100000 requests from workloads/product/create/workload_chunk_08
+Concurrency cap  : 250
+Target           : http://dh2010pc03.utm.utoronto.ca:14133
+Firing...
+
+
+=======================================================
+               LOAD TEST RESULTS
+=======================================================
+  Total requests   : 100000
+  Successful       : 99894  (99.9%)
+  Failed           : 106  (0.1%)
+  Wall time        : 47.45s
+  Throughput       : 2107.5 req/s
+-------------------------------------------------------
+  Latency (ms)
+    min            : 0.3
+    mean           : 113.0
+    median (p50)   : 77.8
+    p90            : 128.0
+    p95            : 295.9
+    p99            : 1101.1
+    max            : 2362.1
+-------------------------------------------------------
+  Status codes
+    200                  : 99894
+    ERROR: [Errno None] Can not write request body  : 106
+=======================================================

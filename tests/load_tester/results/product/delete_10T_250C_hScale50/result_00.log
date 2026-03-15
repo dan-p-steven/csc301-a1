@@ -1,0 +1,29 @@
+Generated 100000 requests from workloads/product/delete/workload_chunk_00
+Concurrency cap  : 250
+Target           : http://dh2010pc03.utm.utoronto.ca:14133
+Firing...
+
+
+=======================================================
+               LOAD TEST RESULTS
+=======================================================
+  Total requests   : 100000
+  Successful       : 37  (0.0%)
+  Failed           : 99963  (100.0%)
+  Wall time        : 49.20s
+  Throughput       : 2032.6 req/s
+-------------------------------------------------------
+  Latency (ms)
+    min            : 0.2
+    mean           : 117.1
+    median (p50)   : 101.9
+    p90            : 124.0
+    p95            : 284.7
+    p99            : 1110.7
+    max            : 3135.1
+-------------------------------------------------------
+  Status codes
+    200                  : 37
+    404                  : 99700
+    ERROR: [Errno None] Can not write request body  : 263
+=======================================================

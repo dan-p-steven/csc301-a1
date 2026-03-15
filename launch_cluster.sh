@@ -4,6 +4,8 @@ USER="stevenda"
 CONFIG_FILE="config.json"
 LOG_DIR="$HOME/logs"
 
+mkdir -p $LOG_DIR
+
 # 1. PRE-FLIGHT CHECKS
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "Error: $CONFIG_FILE not found! Run generate_config.sh first."
