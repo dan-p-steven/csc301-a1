@@ -104,7 +104,9 @@ public class OrderService extends MicroService {
         }
     }
 
-    private void _handleOrder(HttpExchange exchange) throws IOException {
+    private void _handleOrder(HttpExchange exchange)
+    throws IOException {
+
         if (!exchange.getRequestMethod().equals("POST")) {
             HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Invalid Method")));
             return;
@@ -113,43 +115,53 @@ public class OrderService extends MicroService {
         try (InputStreamReader reader = new InputStreamReader(exchange.getRequestBody(), "UTF-8")) {
             OrderRequest req = gson.fromJson(reader, OrderRequest.class);
 
-            // Direct Orchestration: Check User -> Check Product -> Deduct -> Record
-            HttpUtils.sendGetRequest(getNextUserIP(), userPort, "/user/" + req.getUserId())
-                .thenCompose(userResp -> {
+            // 1. Fire both requests simultaneously
+            var userFuture = HttpUtils.sendGetRequest(getNextUserIP(), userPort, "/user/" + req.getUserId());
+            var productFuture = HttpUtils.sendGetRequest(getNextProductIP(), productPort, "/product/" + req.getProductId());
+
+            // 2. Wait for both to complete, then combine the results
+            userFuture.thenCombine(productFuture, (userResp, prodResp) -> {
+                try {
+                    // Validate User
                     if (userResp.statusCode() != 200) {
-                        return java.util.concurrent.CompletableFuture.failedFuture(new Exception("User Not Found"));
+                        HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Invalid Request")));
+                        return null;
                     }
-                    return HttpUtils.sendGetRequest(getNextProductIP(), productPort, "/product/" + req.getProductId());
-                })
-                .thenAccept(prodResp -> {
-                    try {
-                        if (prodResp.statusCode() != 200) {
-                            HttpUtils.sendHttpResponse(exchange, 404, gson.toJson(new OrderResponse(null, null, null, null, "Product Not Found")));
-                            return;
-                        }
-
-                        Product p = gson.fromJson(prodResp.body(), Product.class);
-                        if (p.getQuantity() < req.getQuantity()) {
-                            HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Exceeded quantity limit")));
-                            return;
-                        }
-
-                        // Deduct Product Quantity
-                        ProductPostRequest update = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
-                        HttpUtils.sendPostRequest(getNextProductIP(), productPort, "/product", gson.toJson(update));
-
-                        // Record in local Order DB
-                        db.recordPurchase(req.getUserId(), req.getProductId(), req.getQuantity());
-
-                        HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(new OrderResponse(null, p.getId(), req.getUserId(), req.getQuantity(), "Success")));
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
+                    
+                    // Validate Product
+                    if (prodResp.statusCode() != 200) {
+                        HttpUtils.sendHttpResponse(exchange, 404, gson.toJson(new OrderResponse(null, null, null, null, "Product Not Found")));
+                        return null;
                     }
-                })
-                .exceptionally(ex -> {
+
+                    Product p = gson.fromJson(prodResp.body(), Product.class);
+                    
+                    // Validate Quantity
+                    if (p.getQuantity() < req.getQuantity()) {
+                        HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Exceeded quantity limit")));
+                        return null;
+                    }
+
+                    // Deduct Product Quantity (Fire and forget to the product cluster)
+                    ProductPostRequest update = new ProductPostRequest("update", p.getId(), null, null, null, p.getQuantity() - req.getQuantity());
+                    HttpUtils.sendPostRequest(getNextProductIP(), productPort, "/product", gson.toJson(update));
+
+                    // Record in local Order DB
+                    db.recordPurchase(req.getUserId(), req.getProductId(), req.getQuantity());
+
+                    // Return Success
+                    HttpUtils.sendHttpResponse(exchange, 200, gson.toJson(new OrderResponse(null, p.getId(), req.getUserId(), req.getQuantity(), "Success")));
+                } catch (Exception e) {
                     try { HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Invalid Request"))); } catch (IOException ignored) {}
-                    return null;
-                });
+                }
+                return null;
+            }).exceptionally(ex -> {
+                try { HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Invalid Request"))); } catch (IOException ignored) {}
+                return null;
+            });
+
+        } catch (JsonSyntaxException e) {
+            HttpUtils.sendHttpResponse(exchange, 400, gson.toJson(new OrderResponse(null, null, null, null, "Invalid JSON")));
         }
     }
 
