@@ -30,10 +30,17 @@ class Product:
         if isinstance(self.quantity, str):
             self.quantity = int(self.quantity)
 
-
 @dataclass
-class UserServiceRequest:
-    endpoint: str
-    headers: dict
-    method: str
-    payload: str
+class Order:
+    user_id: int
+    product_id: int
+    quantity: int
+
+    def __post_init__(self):
+        if isinstance(self.user_id, str):
+            self.user_id = int(self.user_id)
+        if isinstance(self.product_id, str):
+            self.product_id = int(self.product_id)
+        if isinstance(self.quantity, str):
+            self.quantity = int(self.quantity)
+

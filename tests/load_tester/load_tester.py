@@ -1,4 +1,4 @@
-from user import User, UserServiceRequest, Product
+from service_classes import User, Product, Order
 import shlex
 import argparse
 import asyncio
@@ -10,8 +10,8 @@ from typing import Optional
 
 import itertools
 
-OBJ_MAPPING = {"USER": User, "PRODUCT": Product, "ORDER": None}
-CMD_MAPPING = {"CREATE": "create", "DELETE": "delete", "UPDATE": "update"}
+OBJ_MAPPING = {"USER": User, "PRODUCT": Product, "ORDER": Order}
+CMD_MAPPING = {"CREATE": "create", "DELETE": "delete", "UPDATE": "update", "PLACE": "place order"}
 
 
 # ---------------------------------------------------------------------------
@@ -35,6 +35,10 @@ def generate_payload(line):
         case "GET":
             payload = {"id": int(line[2])}
 
+        case "PLACE":
+            obj_type = line[0]
+            obj_instance = OBJ_MAPPING[obj_type](*line[2:])
+            payload = {"command": CMD_MAPPING[line[1]], **obj_instance.__dict__}
         case _:
             payload = {}
 
