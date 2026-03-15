@@ -1,37 +1,33 @@
 #!/bin/bash
-NUM_TESTERS=10
 
 N=100000
 IP="dh2010pc03.utm.utoronto.ca"
 
-#C=250
-#OUT_DIR="product_testing_results/c250"
-WORK_DIR="product_workloads"
-#
-#echo "Initiating Testing Swarm..."
-#
-#for i in {0..9}
-#do
-#   echo testing product_workloads/workload_part_$i...
-#   python3 load_tester.py -w $WORK_DIR/workload_part_0$i -u http://$IP:14133 -c $C -n $N > "$OUT_DIR/result_$i.log" &
-#done
-#
-#wait
-#
-##wipe 
-#curl http://$IP:14133/product/wipe
+WORK_DIR="workloads/product/create/"
+C=250
+SERVICE="product"
+CMD="create"
+NUM_TESTERS=10
+ARCH="hScale50"
 
-C=1000
-OUT_DIR="product_testing_results/c400"
+OUT_DIR="results/${SERVICE}/${CMD}_${NUM_TESTERS}T_${C}C_${ARCH}"
 
-echo "Initiating Testing Swarm..."
 
-for i in {0..9}
+echo "Initiating Testing Swarm"
+echo "\t${SERVICE}_${CMD}_${NUM_TESTERS}T_${C}C_${ARCH}"
+
+END_INDEX=$((NUM_TESTERS - 1))
+mkdir -p $OUTDIR
+
+for i in $(seq -f "%02g" 0 $END_INDEX)
 do
-   echo testing product_workloads/workload_part_$i...
-   python3 load_tester.py -w $WORK_DIR/workload_part_0$i -u http://$IP:14133 -c $C -n $N > "$OUT_DIR/result_$i.log" &
+   echo "\tFiring ${WORK_DIR}/workload_chunk_$i..."
+   python3 load_tester.py -w $WORK_DIR/workload_chunk_$i -u http://$IP:14133 -c $C -n $N > "$OUT_DIR/result_$i.log" &
 done
 
 wait
 
-echo "The dust has settled. Check the doomsday logs."
+#wipe 
+curl http://$IP:14133/${SERVICE}/wipe
+
+echo "Dust has settled. Check results at: ${OUT_DIR}"

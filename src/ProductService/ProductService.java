@@ -27,7 +27,7 @@ public class ProductService extends MicroService {
     private static final Gson gson = new Gson();
 
     private final ProductDatabaseManager db;
-    private int DB_POOL = 50; // Added the connection pool baseline
+    private int DB_POOL = 3; // Added the connection pool baseline
 
     // ------------------------------------------------------------------
     // Constructor

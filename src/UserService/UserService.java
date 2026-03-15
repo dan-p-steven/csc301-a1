@@ -56,7 +56,7 @@ public class UserService extends MicroService {
         .create();
 
     private final UserDatabaseManager db;
-    private int DB_POOL = 50;
+    private int DB_POOL = 2;
 
     // ------------------------------------------------------------------
     // Constructor

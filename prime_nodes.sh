@@ -15,9 +15,9 @@ for id in {03..50}; do
     # 1. QUERY: Attempt a fast, silent SSH connection (2-second timeout)
     if ssh -o ConnectTimeout=2 -o BatchMode=yes -o StrictHostKeyChecking=no "$USER@$NODE" exit &>/dev/null; then
         
-        # 2. PRIME: We got in! Now, wipe the slate clean.
-        # Kill any zombie Java processes belonging to you so the ports are free.
-        ssh -o BatchMode=yes -o StrictHostKeyChecking=no "$USER@$NODE" "pkill -u $USER java" &>/dev/null
+        # 2. PRIME: Added SSH timeout AND remote execution timeout
+        # If 'pkill' hangs on a frozen filesystem, it automatically aborts after 5 seconds.
+        ssh -o ConnectTimeout=2 -o BatchMode=yes -o StrictHostKeyChecking=no "$USER@$NODE" "timeout 5 pkill -u $USER java" &>/dev/null
         
         # 3. RECORD: Add this healthy, primed node to our official roster.
         echo "$NODE" >> "$ROSTER_FILE"
